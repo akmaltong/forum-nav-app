@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -9,7 +9,6 @@ interface Props {
 
 export default function ZoneMarkerHighlight({ position, color }: Props) {
   const meshRef = useRef<THREE.Mesh>(null)
-  const [pulse, setPulse] = useState(0)
   
   useFrame((state) => {
     if (meshRef.current) {

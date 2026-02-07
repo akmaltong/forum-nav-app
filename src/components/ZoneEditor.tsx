@@ -145,7 +145,7 @@ export default function ZoneEditor() {
 
     setUnsavedChanges(false)
 
-    const code = `// Zone: ${zone.name}\n// POI Settings:\npoi: {\n  cameraPosition: [${newPoi.cameraPosition[0].toFixed(3)}, ${newPoi.cameraPosition[1].toFixed(3)}, ${newPoi.cameraPosition[2].toFixed(3)}],\n  targetPosition: [${newPoi.targetPosition[0].toFixed(3)}, ${newPoi.targetPosition[1].toFixed(3)}, ${newPoi.targetPosition[2].toFixed(3)}],\n  distance: ${newPoi.distance.toFixed(1)},\n  azimuthDeg: ${newPoi.azimuthDeg.toFixed(2)},\n  elevationDeg: ${newPoi.elevationDeg.toFixed(2)}\n}`
+    const code = `// Zone: ${zone.name}\n// POI Settings:\npoi: {\n  cameraPosition: [${newPoi.cameraPosition[0].toFixed(3)}, ${newPoi.cameraPosition[1].toFixed(3)}, ${newPoi.cameraPosition[2].toFixed(3)}],\n  targetPosition: [${newPoi.targetPosition[0].toFixed(3)}, ${newPoi.targetPosition[1].toFixed(3)}, ${newPoi.targetPosition[2].toFixed(3)}],\n  distance: ${(newPoi.distance ?? 0).toFixed(1)},\n  azimuthDeg: ${(newPoi.azimuthDeg ?? 0).toFixed(2)},\n  elevationDeg: ${(newPoi.elevationDeg ?? 0).toFixed(2)}\n}`
 
     navigator.clipboard.writeText(code).then(() => {
       console.log(`POI для ${zone.name} сохранен:`, newPoi)

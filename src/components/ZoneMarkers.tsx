@@ -46,28 +46,30 @@ export default function ZoneMarkers() {
               <ZoneMarkerHighlight position={[0, 0, 0]} color={zone.color} />
             )}
 
-            {/* Zone label - HTML with sprite for camera-facing */}
+            {/* Zone label — CSS-based (not transform) for crisp text */}
             <Html
               position={[0, 8, 0]}
-              style={{ pointerEvents: 'none' }}
+              center
+              distanceFactor={60}
               occlude={false}
-              transform
               sprite
+              style={{ pointerEvents: 'auto' }}
             >
               <div
-                className={`px-4 py-3 rounded-xl font-bold whitespace-nowrap shadow-2xl transition-all pointer-events-auto ${isSelected
-                    ? 'bg-white text-gray-900 scale-125'
-                    : 'bg-gray-900/95 text-white hover:bg-gray-800/100'
+                className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap cursor-pointer select-none transition-all ${isSelected
+                  ? 'bg-white/20 text-white scale-110 ring-1 ring-white/30'
+                  : 'bg-black/50 text-white/90 hover:bg-black/60'
                   }`}
                 style={{
-                  borderLeft: `5px solid ${zone.color}`,
-                  fontSize: '18px',
-                  maxWidth: '300px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                  backdropFilter: 'blur(6px)',
-                  transform: 'scale(1.2)'
+                  borderLeft: `3px solid ${zone.color}`,
+                  fontSize: '13px',
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                  border: `1px solid rgba(255,255,255,0.08)`,
+                  borderLeftWidth: '3px',
+                  borderLeftColor: zone.color,
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                  letterSpacing: '0.01em',
                 }}
                 onClick={(e) => {
                   e.stopPropagation()

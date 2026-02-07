@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/appStore'
-import { zones, events, friends } from '../data/mockData'
+import { zones } from '../data/mockData'
 
 export default function StoreInitializer() {
   const setZones = useAppStore(state => state.setZones)

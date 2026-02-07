@@ -3,10 +3,10 @@ import { Html } from '@react-three/drei'
 
 export default function UserMarker() {
   const userLocation = useAppStore(state => state.userLocation)
-  const setUserLocation = useAppStore(state => state.setUserLocation)
+  const viewMode = useAppStore(state => state.viewMode)
 
-  // Marker visual rendering only. Position is managed by StoreInitializer (init) and FirstPersonControls (move).
-  if (!userLocation) return null
+  // Hide in first-person mode — no need to see yourself
+  if (!userLocation || viewMode === 'first-person') return null
 
   return (
     <group position={userLocation.position}>

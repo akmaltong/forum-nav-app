@@ -13,11 +13,9 @@ export default function FriendsPanel() {
     const userLocation = useAppStore.getState().userLocation
 
     if (userLocation) {
-      // Use navigation utility
       const route = calculateRoute(userLocation.position, friend.location.position)
       setRoute(route)
 
-      // Create notification
       const { addNotification } = useAppStore.getState()
       addNotification(createNavigationNotification(friend.name, route.distance, route.estimatedTime))
 
@@ -25,60 +23,70 @@ export default function FriendsPanel() {
     }
   }
 
+  const onlineCount = friends.filter(f => f.isOnline).length
+
   return (
-    <div className="h-full bg-gray-900 text-white overflow-hidden flex flex-col">
+    <div className="max-h-[calc(100vh-60px)] bg-black/40 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-2xl m-2 border border-white/10 shadow-2xl">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-teal-600 p-2.5 flex items-center justify-between">
-        <h2 className="text-base font-bold">👥 Друзья на форуме</h2>
+      <div className="px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
+        <div className="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+          <h2 className="text-sm font-semibold text-gray-200">Друзья</h2>
+          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-md font-medium">
+            {onlineCount} онлайн
+          </span>
+        </div>
         <button
           onClick={() => setActivePanel(null)}
-          className="text-white hover:bg-white/20 rounded-full p-2"
+          className="text-gray-500 hover:text-white hover:bg-white/10 rounded-lg p-1 transition-colors"
         >
-          ✕
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
         </button>
       </div>
 
-      {/* Online count */}
-      <div className="bg-gray-800 p-1.5 text-center text-xs">
-        <span className="text-green-400 font-bold">
-          {friends.filter(f => f.isOnline).length} онлайн
-        </span>
-        <span className="text-gray-500"> из {friends.length}</span>
-      </div>
-
       {/* Friends list */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+      <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1.5">
         {friends.map(friend => {
           const isSelected = selectedFriend?.id === friend.id
 
           return (
             <div
               key={friend.id}
-              className={`bg-gray-800 rounded-lg p-2 cursor-pointer transition-all hover:bg-gray-750 ${isSelected ? 'ring-2 ring-green-400' : ''
-                } ${!friend.isOnline ? 'opacity-50' : ''}`}
+              className={`bg-white/5 rounded-xl px-3 py-2 cursor-pointer transition-all hover:bg-white/10 ${isSelected ? 'ring-1 ring-white/20' : ''
+                } ${!friend.isOnline ? 'opacity-40' : ''}`}
               onClick={() => setSelectedFriend(isSelected ? null : friend)}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <div className="relative">
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-lg">
-                    👤
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-gray-700 rounded-full flex items-center justify-center">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
                   </div>
                   {friend.isOnline && (
-                    <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 border-2 border-gray-800 rounded-full" />
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-black/40 rounded-full" />
                   )}
                 </div>
 
-                <div className="flex-1">
-                  <h3 className="font-bold text-sm leading-tight">{friend.name}</h3>
-                  <p className="text-[11px] text-gray-500">
-                    {friend.isOnline ? '🟢 В сети' : '⚫ Не в сети'}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-xs leading-tight truncate text-gray-100">{friend.name}</h3>
+                  <p className="text-[10px] text-gray-500">
+                    {friend.isOnline ? 'В сети' : 'Не в сети'}
                   </p>
                 </div>
               </div>
 
               {isSelected && friend.isOnline && (
-                <div className="mt-2 pt-2 border-t border-gray-700">
-                  <div className="text-[11px] text-gray-500 mb-2">
+                <div className="mt-2 pt-2 border-t border-white/[0.06]">
+                  <div className="text-[10px] text-gray-500 mb-2">
                     Местоположение: Главная площадка
                   </div>
                   <div className="flex gap-1.5">
@@ -87,14 +95,17 @@ export default function FriendsPanel() {
                         e.stopPropagation()
                         handleNavigateToFriend(friend)
                       }}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1.5 rounded-lg font-medium transition-colors text-xs"
+                      className="flex-1 bg-white/10 hover:bg-white/15 text-white py-1.5 rounded-lg font-medium transition-all text-[10px] border border-white/[0.06]"
                     >
-                      🧭 Найти на карте
+                      Найти на карте
                     </button>
                     <button
-                      className="px-3 bg-gray-700 hover:bg-gray-600 text-white py-1.5 rounded-lg font-medium transition-colors"
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-3 bg-white/10 hover:bg-white/15 text-white py-1.5 rounded-lg font-medium transition-all border border-white/[0.06]"
                     >
-                      💬
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                      </svg>
                     </button>
                   </div>
                 </div>
@@ -104,10 +115,15 @@ export default function FriendsPanel() {
         })}
 
         {friends.length === 0 && (
-          <div className="text-center text-gray-500 py-12">
-            <div className="text-6xl mb-4">👥</div>
-            <p>У вас пока нет друзей на форуме</p>
-            <button className="mt-4 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+          <div className="text-center text-gray-600 py-8">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto mb-3 opacity-20">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <p className="text-xs mb-3">У вас пока нет друзей на форуме</p>
+            <button className="px-4 py-1.5 bg-white/10 text-white text-xs rounded-lg hover:bg-white/15 border border-white/[0.06] transition-all">
               Добавить друзей
             </button>
           </div>

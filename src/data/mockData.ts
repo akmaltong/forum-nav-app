@@ -1,4 +1,4 @@
-import type { Zone, Event, Friend, POICamera } from '../types'
+import type { Zone, Event, Friend } from '../types'
 import { pois } from './poiData'
 
 const poiMap = new Map(pois.map(poi => [poi.name, poi]))

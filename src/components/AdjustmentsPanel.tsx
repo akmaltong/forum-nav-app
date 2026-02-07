@@ -27,12 +27,14 @@ const hdriOptions = [
 ]
 
 const presets = [
-    { label: 'Утро', time: 8, orientation: 90 },
-    { label: 'Полдень', time: 12, orientation: 180 },
-    { label: 'День', time: 14, orientation: 200 },
-    { label: 'Закат', time: 18, orientation: 270 },
-    { label: 'Ночь', time: 22, orientation: 0 },
+    { label: 'Утро', time: 8, orientation: 90, icon: '🌅' },
+    { label: 'Полдень', time: 12, orientation: 180, icon: '☀️' },
+    { label: 'День', time: 14, orientation: 200, icon: '🌤️' },
+    { label: 'Закат', time: 18, orientation: 270, icon: '🌇' },
+    { label: 'Ночь', time: 22, orientation: 0, icon: '🌙' },
 ]
+
+const toneMappingOptions = ['ACES', 'AgX', 'Neutral', 'Reinhard', 'Cineon', 'Linear']
 
 function formatTime(hours: number): string {
     const h = Math.floor(hours)
@@ -42,259 +44,314 @@ function formatTime(hours: number): string {
     return `${displayH}:${m.toString().padStart(2, '0')} ${period}`
 }
 
-type PanelMode = 'lighting' | 'environment'
+type PanelMode = 'lighting' | 'environment' | 'effects' | 'atmosphere'
+
+// Compact slider component
+function MiniSlider({ label, value, min, max, step, onChange, displayValue }: {
+    label: string; value: number; min: number; max: number; step: number;
+    onChange: (v: number) => void; displayValue?: string
+}) {
+    return (
+        <div className="flex-1 min-w-[60px] sm:min-w-0">
+            <div className="flex justify-between items-center mb-1">
+                <span className="text-[8px] sm:text-[9px] text-white/50 font-medium tracking-wider uppercase">{label}</span>
+                {displayValue && <span className="text-[8px] sm:text-[9px] text-white/40 font-mono">{displayValue}</span>}
+            </div>
+            <input
+                type="range" min={min} max={max} step={step} value={value}
+                onChange={(e) => onChange(parseFloat(e.target.value))}
+                className="w-full h-1 bg-white/15 rounded-full appearance-none cursor-pointer accent-white"
+            />
+        </div>
+    )
+}
+
+// Toggle switch
+function MiniToggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+    return (
+        <button
+            onClick={() => onChange(!value)}
+            className={`px-2 py-1 rounded-md text-[10px] font-medium transition-all border whitespace-nowrap ${value
+                ? 'bg-blue-500/30 border-blue-400/40 text-blue-300'
+                : 'bg-white/5 border-white/10 text-white/40'
+                }`}
+        >
+            {label}
+        </button>
+    )
+}
+
+// Close button component to avoid repetition
+function CloseButton({ onClick, className = '' }: { onClick: () => void; className?: string }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`shrink-0 p-1 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors ${className}`}
+        >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+        </button>
+    )
+}
 
 export default function AdjustmentsPanel() {
     const [mode, setMode] = useState<PanelMode>('lighting')
-    const [showPresets, setShowPresets] = useState(false)
 
-    const {
-        hdriBlur, setHdriBlur,
-        hdriRotation1, setHdriRotation1,
-        hdriMix, setHdriMix,
-        hdriProcedural, setHdriProcedural,
-        hdriIntensity, setHdriIntensity,
-        hdriFile, setHdriFile,
-        timeOfDay, setTimeOfDay,
-        sunOrientation, setSunOrientation,
-        setShowAdjustments,
-        setBackgroundMode,
-    } = useAppStore(state => ({
-        hdriBlur: state.hdriBlur,
-        setHdriBlur: state.setHdriBlur,
-        hdriRotation1: state.hdriRotation1,
-        setHdriRotation1: state.setHdriRotation1,
-        hdriMix: state.hdriMix,
-        setHdriMix: state.setHdriMix,
-        hdriProcedural: state.hdriProcedural,
-        setHdriProcedural: state.setHdriProcedural,
-        hdriIntensity: state.hdriIntensity,
-        setHdriIntensity: state.setHdriIntensity,
-        hdriFile: state.hdriFile,
-        setHdriFile: state.setHdriFile,
-        timeOfDay: state.timeOfDay,
-        setTimeOfDay: state.setTimeOfDay,
-        sunOrientation: state.sunOrientation,
-        setSunOrientation: state.setSunOrientation,
-        setShowAdjustments: state.setShowAdjustments,
-        setBackgroundMode: state.setBackgroundMode,
-    }))
+    const store = useAppStore()
 
     const applyPreset = (preset: typeof presets[0]) => {
-        setTimeOfDay(preset.time)
-        setSunOrientation(preset.orientation)
-        setShowPresets(false)
+        store.setTimeOfDay(preset.time)
+        store.setSunOrientation(preset.orientation)
     }
 
     return (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none">
-            {/* Mode tabs */}
-            <div className="flex justify-center mb-2 gap-1">
-                <button
-                    onClick={() => { setMode('lighting'); setBackgroundMode('sky') }}
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${mode === 'lighting'
-                        ? 'bg-white/20 text-white backdrop-blur-md'
-                        : 'text-white/50 hover:text-white/80'
-                        }`}
-                >
-                    Освещение
-                </button>
-                <button
-                    onClick={() => { setMode('environment'); setBackgroundMode('hdri') }}
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${mode === 'environment'
-                        ? 'bg-white/20 text-white backdrop-blur-md'
-                        : 'text-white/50 hover:text-white/80'
-                        }`}
-                >
-                    Окружение
-                </button>
+        <div className="fixed bottom-16 sm:bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-auto select-none w-[calc(100%-16px)] sm:w-auto">
+            {/* Mode tabs — scrollable on mobile */}
+            <div className="flex justify-center mb-2 gap-1 overflow-x-auto no-scrollbar">
+                {([
+                    { key: 'lighting' as PanelMode, label: 'Освещение', action: () => store.setBackgroundMode('sky') },
+                    { key: 'atmosphere' as PanelMode, label: 'Атмосфера', action: () => store.setBackgroundMode('sky') },
+                    { key: 'environment' as PanelMode, label: 'Окружение', action: () => store.setBackgroundMode('hdri') },
+                    { key: 'effects' as PanelMode, label: 'Эффекты', action: () => {} },
+                ]).map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => { setMode(tab.key); tab.action() }}
+                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-medium transition-all whitespace-nowrap ${mode === tab.key
+                            ? 'bg-white/20 text-white backdrop-blur-md'
+                            : 'text-white/50 hover:text-white/80'
+                            }`}
+                    >
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
-            {/* Glass panel */}
-            <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl px-6 py-4 min-w-[500px] max-w-[700px]">
+            {/* Glass panel — responsive width */}
+            <div className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl px-3 sm:px-5 py-3 w-full sm:min-w-[520px] sm:max-w-[780px] max-h-[50vh] overflow-y-auto">
 
                 {mode === 'lighting' ? (
                     /* LIGHTING MODE */
-                    <div className="flex items-center gap-6">
-                        {/* Time display */}
-                        <div className="shrink-0 text-center">
-                            <div className="text-3xl font-bold text-white tracking-tight leading-none">
-                                {formatTime(timeOfDay).split(' ')[0]}
-                            </div>
-                            <div className="text-[10px] text-white/50 font-medium tracking-wider">
-                                {formatTime(timeOfDay).split(' ')[1]}
-                            </div>
-                        </div>
-
-                        {/* Preset button */}
-                        <div className="relative shrink-0">
-                            <button
-                                onClick={() => setShowPresets(!showPresets)}
-                                className="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white text-xs font-medium transition-all flex items-center gap-1 border border-white/10"
-                            >
-                                PRESET
-                                <svg className={`w-3 h-3 transition-transform ${showPresets ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                                </svg>
-                            </button>
-
-                            {showPresets && (
-                                <div className="absolute bottom-full mb-2 left-0 bg-black/80 backdrop-blur-xl rounded-lg border border-white/10 overflow-hidden min-w-[120px]">
-                                    {presets.map((preset) => (
-                                        <button
-                                            key={preset.label}
-                                            onClick={() => applyPreset(preset)}
-                                            className="w-full px-3 py-1.5 text-left text-xs text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-                                        >
-                                            {preset.label}
-                                        </button>
-                                    ))}
+                    <div className="space-y-3 sm:space-y-0">
+                        {/* Mobile: stack, Desktop: single row */}
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-5">
+                            {/* Time display */}
+                            <div className="shrink-0 text-center">
+                                <div className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-none">
+                                    {formatTime(store.timeOfDay).split(' ')[0]}
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Time of Day slider */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                TIME OF DAY
+                                <div className="text-[10px] text-white/50 font-medium tracking-wider">
+                                    {formatTime(store.timeOfDay).split(' ')[1]}
+                                </div>
                             </div>
-                            <div className="relative">
+
+                            {/* Preset buttons inline */}
+                            <div className="shrink-0 flex gap-1">
+                                {presets.map((preset) => (
+                                    <button
+                                        key={preset.label}
+                                        onClick={() => applyPreset(preset)}
+                                        title={preset.label}
+                                        className={`w-7 h-7 rounded-lg text-sm flex items-center justify-center transition-all border ${
+                                            Math.abs(store.timeOfDay - preset.time) < 1
+                                                ? 'bg-white/20 border-white/30'
+                                                : 'bg-white/5 border-white/10 hover:bg-white/15'
+                                        }`}
+                                    >
+                                        {preset.icon}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Time of Day slider */}
+                            <div className="flex-1 min-w-0 w-full sm:w-auto">
+                                <div className="text-[9px] text-white/50 font-medium tracking-wider uppercase mb-1.5">
+                                    TIME OF DAY
+                                </div>
                                 <input
                                     type="range"
                                     min={5}
                                     max={21}
                                     step={0.1}
-                                    value={timeOfDay}
-                                    onChange={(e) => setTimeOfDay(parseFloat(e.target.value))}
+                                    value={store.timeOfDay}
+                                    onChange={(e) => store.setTimeOfDay(parseFloat(e.target.value))}
                                     className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
                                     style={{
                                         background: 'linear-gradient(to right, #1a1a3e, #4a3a6e, #c98030, #f0c040, #ffe870, #f0c040, #c98030, #4a3a6e, #1a1a3e)',
                                     }}
                                 />
-                                <div className="flex justify-between text-[8px] text-white/30 mt-1">
-                                    <span>5 AM</span>
-                                    <span>9 AM</span>
-                                    <span>12 PM</span>
-                                    <span>3 PM</span>
-                                    <span>6 PM</span>
-                                    <span>9 PM</span>
-                                </div>
                             </div>
-                        </div>
 
-                        {/* Sun Orientation slider */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                SUN ORIENTATION
-                            </div>
-                            <div className="relative">
+                            {/* Sun Orientation */}
+                            <div className="w-full sm:w-[90px] shrink-0">
+                                <div className="text-[9px] text-white/50 font-medium tracking-wider uppercase mb-1.5">
+                                    ORIENTATION
+                                </div>
                                 <input
-                                    type="range"
-                                    min={0}
-                                    max={360}
-                                    step={1}
-                                    value={sunOrientation}
-                                    onChange={(e) => setSunOrientation(parseFloat(e.target.value))}
-                                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
+                                    type="range" min={0} max={360} step={1}
+                                    value={store.sunOrientation}
+                                    onChange={(e) => store.setSunOrientation(parseFloat(e.target.value))}
+                                    className="w-full h-1.5 bg-white/15 rounded-full appearance-none cursor-pointer accent-white"
                                 />
-                                <div className="flex justify-between text-[8px] text-white/30 mt-1">
-                                    <span>0°</span>
-                                    <span>90°</span>
-                                    <span>180°</span>
-                                    <span>270°</span>
-                                    <span>360°</span>
-                                </div>
                             </div>
+
+                            {/* Night lights toggle */}
+                            <MiniToggle label="🏮" value={store.nightLightsEnabled} onChange={store.setNightLightsEnabled} />
+
+                            {/* Close */}
+                            <CloseButton onClick={() => store.setShowAdjustments(false)} />
+                        </div>
+                    </div>
+                ) : mode === 'environment' ? (
+                    /* ENVIRONMENT MODE */
+                    <div className="space-y-3 sm:space-y-0">
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
+                            {/* HDRI selector */}
+                            <div className="shrink-0 w-full sm:w-auto sm:min-w-[120px]">
+                                <div className="text-[9px] text-white/50 font-medium tracking-wider uppercase mb-1.5">HDRI</div>
+                                <select
+                                    value={store.hdriFile}
+                                    onChange={(e) => store.setHdriFile(e.target.value)}
+                                    className="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1 text-white text-[10px] cursor-pointer focus:outline-none hover:bg-white/15 transition-colors"
+                                >
+                                    {hdriOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value} className="bg-gray-900">
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <MiniSlider label="BLUR" value={store.hdriBlur} min={0} max={1} step={0.01} onChange={store.setHdriBlur} />
+                            <MiniSlider label="INTENSITY" value={store.hdriIntensity} min={0.05} max={5} step={0.01} onChange={store.setHdriIntensity} displayValue={store.hdriIntensity.toFixed(1)} />
+                            <MiniSlider label="ROTATION" value={store.hdriRotation1} min={0} max={6.28} step={0.01} onChange={store.setHdriRotation1} />
+                            <MiniSlider label="EXPOSURE" value={store.toneMappingExposure} min={0.2} max={20} step={0.1} onChange={store.setToneMappingExposure} displayValue={store.toneMappingExposure.toFixed(1)} />
+
+                            <CloseButton onClick={() => store.setShowAdjustments(false)} />
+                        </div>
+                    </div>
+                ) : mode === 'atmosphere' ? (
+                    /* ATMOSPHERE MODE */
+                    <div className="space-y-3">
+                        {/* Row 1: Toggles */}
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <MiniToggle label="☁️ Облака" value={store.cloudsEnabled} onChange={store.setCloudsEnabled} />
+                            <MiniToggle label="🌫️ Атмосфера" value={store.atmosphereEnabled} onChange={store.setAtmosphereEnabled} />
+                            <MiniToggle label="🌁 Туман" value={store.fogEnabled} onChange={store.setFogEnabled} />
+                            <MiniToggle label="☀️ Лучи" value={store.godRaysEnabled} onChange={store.setGodRaysEnabled} />
+                            <CloseButton onClick={() => store.setShowAdjustments(false)} className="ml-auto" />
                         </div>
 
-                        {/* Close */}
-                        <button
-                            onClick={() => setShowAdjustments(false)}
-                            className="shrink-0 p-1.5 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
+                        {/* Row 2: Cloud controls */}
+                        {store.cloudsEnabled && (
+                            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+                                <MiniSlider label="ПОКРЫТИЕ" value={store.cloudCoverage} min={0} max={1} step={0.01} onChange={store.setCloudCoverage} displayValue={`${Math.round(store.cloudCoverage * 100)}%`} />
+                                <MiniSlider label="ПЛОТНОСТЬ" value={store.cloudDensity} min={0} max={1} step={0.01} onChange={store.setCloudDensity} displayValue={store.cloudDensity.toFixed(2)} />
+                                <MiniSlider label="МАСШТАБ" value={store.cloudScale} min={0.3} max={3} step={0.1} onChange={store.setCloudScale} displayValue={store.cloudScale.toFixed(1)} />
+                                <MiniSlider label="СКОРОСТЬ" value={store.cloudSpeed} min={0} max={0.1} step={0.001} onChange={store.setCloudSpeed} displayValue={store.cloudSpeed.toFixed(3)} />
+                                <MiniSlider label="ВЫСОТА" value={store.cloudAltitude} min={30} max={200} step={5} onChange={store.setCloudAltitude} displayValue={`${store.cloudAltitude}м`} />
+                                <MiniSlider label="ПРОЗР." value={store.cloudOpacity} min={0} max={1} step={0.01} onChange={store.setCloudOpacity} displayValue={store.cloudOpacity.toFixed(2)} />
+                            </div>
+                        )}
+
+                        {/* Row 3: Atmosphere + Fog + God Rays controls */}
+                        {(store.atmosphereEnabled || store.fogEnabled || store.godRaysEnabled) && (
+                            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+                                {store.atmosphereEnabled && (
+                                    <>
+                                        <MiniSlider label="ИНТЕНС." value={store.atmosphereIntensity} min={0} max={1} step={0.01} onChange={store.setAtmosphereIntensity} displayValue={store.atmosphereIntensity.toFixed(2)} />
+                                        <MiniSlider label="МУТНОСТЬ" value={store.atmosphereTurbidity} min={0.5} max={10} step={0.1} onChange={store.setAtmosphereTurbidity} displayValue={store.atmosphereTurbidity.toFixed(1)} />
+                                        <MiniSlider label="РЭЛЕЙ" value={store.atmosphereRayleighScale} min={0.1} max={3} step={0.1} onChange={store.setAtmosphereRayleighScale} displayValue={store.atmosphereRayleighScale.toFixed(1)} />
+                                    </>
+                                )}
+                                {store.fogEnabled && (
+                                    <>
+                                        <MiniSlider label="ТУМАН" value={store.fogDensity} min={0} max={1} step={0.01} onChange={store.setFogDensity} displayValue={store.fogDensity.toFixed(2)} />
+                                        <MiniSlider label="ВЫСОТА ТУМ." value={store.fogHeight} min={0} max={20} step={0.5} onChange={store.setFogHeight} displayValue={`${store.fogHeight}м`} />
+                                    </>
+                                )}
+                                {store.godRaysEnabled && (
+                                    <MiniSlider label="ЛУЧИ" value={store.godRaysIntensity} min={0} max={1} step={0.01} onChange={store.setGodRaysIntensity} displayValue={store.godRaysIntensity.toFixed(2)} />
+                                )}
+                            </div>
+                        )}
                     </div>
                 ) : (
-                    /* ENVIRONMENT MODE */
-                    <div className="flex items-center gap-5">
-                        {/* HDRI selector */}
-                        <div className="shrink-0 min-w-[130px]">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                HDRI
+                    /* EFFECTS MODE */
+                    <div className="space-y-3">
+                        {/* Row 1: Quality + Tone mapping */}
+                        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
+                            {/* Quality toggle */}
+                            <div className="shrink-0">
+                                <button
+                                    onClick={() => store.setGraphicsQuality(store.graphicsQuality === 'high' ? 'performance' : 'high')}
+                                    className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+                                        store.graphicsQuality === 'high'
+                                            ? 'bg-green-500/20 border-green-400/40 text-green-300'
+                                            : 'bg-red-500/10 border-red-400/20 text-red-300'
+                                    }`}
+                                >
+                                    {store.graphicsQuality === 'high' ? '✦ HIGH' : '⚡ PERF'}
+                                </button>
                             </div>
-                            <select
-                                value={hdriFile}
-                                onChange={(e) => setHdriFile(e.target.value)}
-                                className="w-full bg-white/10 border border-white/10 rounded-lg px-2 py-1.5 text-white text-[11px] cursor-pointer focus:outline-none hover:bg-white/15 transition-colors"
-                            >
-                                {hdriOptions.map((opt) => (
-                                    <option key={opt.value} value={opt.value} className="bg-gray-900">
-                                        {opt.label}
-                                    </option>
-                                ))}
-                            </select>
+
+                            {/* Tone mapping selector */}
+                            <div className="shrink-0">
+                                <div className="text-[9px] text-white/50 font-medium tracking-wider uppercase mb-1">TONE MAP</div>
+                                <div className="flex gap-0.5 flex-wrap">
+                                    {toneMappingOptions.map(opt => (
+                                        <button
+                                            key={opt}
+                                            onClick={() => store.setToneMapping(opt)}
+                                            className={`px-1.5 py-0.5 rounded text-[9px] transition-all ${
+                                                store.toneMapping === opt
+                                                    ? 'bg-white/20 text-white'
+                                                    : 'text-white/30 hover:text-white/60'
+                                            }`}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <MiniSlider label="EXPOSURE" value={store.toneMappingExposure} min={0.2} max={20} step={0.1} onChange={store.setToneMappingExposure} displayValue={store.toneMappingExposure.toFixed(1)} />
+
+                            <CloseButton onClick={() => store.setShowAdjustments(false)} className="ml-auto" />
                         </div>
 
-                        {/* Blur */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                BLUR
+                        {/* Row 2: Effect sliders */}
+                        {store.graphicsQuality === 'high' && (
+                            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+                                <MiniSlider label="BLOOM" value={store.bloomIntensity} min={0} max={2} step={0.01} onChange={store.setBloomIntensity} displayValue={store.bloomIntensity.toFixed(2)} />
+                                <MiniSlider label="VIGNETTE" value={store.vignetteIntensity} min={0} max={1} step={0.01} onChange={store.setVignetteIntensity} displayValue={store.vignetteIntensity.toFixed(2)} />
+                                <MiniSlider label="CHROMA" value={store.chromaticAberration} min={0} max={0.01} step={0.0001} onChange={store.setChromaticAberration} />
+                                <MiniToggle label="DOF" value={store.dofEnabled} onChange={store.setDofEnabled} />
+                                <MiniToggle label="SHADOW" value={store.contactShadowsEnabled} onChange={store.setContactShadowsEnabled} />
                             </div>
-                            <input
-                                type="range" min={0} max={1} step={0.01} value={hdriBlur}
-                                onChange={(e) => setHdriBlur(parseFloat(e.target.value))}
-                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
-                            />
-                        </div>
+                        )}
 
-                        {/* Sharpness / Procedural */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                ЧЕТКОСТЬ
+                        {/* Row 3: Color correction */}
+                        {store.graphicsQuality === 'high' && (
+                            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
+                                <MiniSlider label="BRIGHTNESS" value={store.colorBrightness} min={-0.3} max={0.3} step={0.01} onChange={store.setColorBrightness} displayValue={store.colorBrightness.toFixed(2)} />
+                                <MiniSlider label="CONTRAST" value={store.colorContrast} min={-0.3} max={0.5} step={0.01} onChange={store.setColorContrast} displayValue={store.colorContrast.toFixed(2)} />
+                                <MiniSlider label="SATURATION" value={store.colorSaturation} min={-1} max={1} step={0.01} onChange={store.setColorSaturation} displayValue={store.colorSaturation.toFixed(2)} />
+                                {store.dofEnabled && (
+                                    <>
+                                        <MiniSlider label="FOCUS" value={store.dofFocusDistance} min={0} max={0.1} step={0.001} onChange={store.setDofFocusDistance} />
+                                        <MiniSlider label="BOKEH" value={store.dofBokehScale} min={0} max={10} step={0.1} onChange={store.setDofBokehScale} displayValue={store.dofBokehScale.toFixed(1)} />
+                                    </>
+                                )}
                             </div>
-                            <input
-                                type="range" min={0} max={1} step={0.01} value={hdriProcedural}
-                                onChange={(e) => setHdriProcedural(parseFloat(e.target.value))}
-                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
-                            />
-                        </div>
+                        )}
 
-                        {/* Intensity */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                INTENSITY
+                        {store.graphicsQuality === 'performance' && (
+                            <div className="text-center text-white/30 text-[10px] py-1">
+                                Включите режим HIGH для настройки эффектов
                             </div>
-                            <input
-                                type="range" min={0.05} max={5} step={0.01} value={hdriIntensity}
-                                onChange={(e) => setHdriIntensity(parseFloat(e.target.value))}
-                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
-                            />
-                        </div>
-
-                        {/* Rotation */}
-                        <div className="flex-1 min-w-0">
-                            <div className="text-[10px] text-white/60 font-medium tracking-wider uppercase mb-1.5">
-                                ROTATION
-                            </div>
-                            <input
-                                type="range" min={0} max={6.28} step={0.01} value={hdriRotation1}
-                                onChange={(e) => setHdriRotation1(parseFloat(e.target.value))}
-                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white"
-                            />
-                        </div>
-
-                        {/* Close */}
-                        <button
-                            onClick={() => setShowAdjustments(false)}
-                            className="shrink-0 p-1.5 rounded-full hover:bg-white/10 text-white/40 hover:text-white transition-colors"
-                        >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                            </svg>
-                        </button>
+                        )}
                     </div>
                 )}
             </div>

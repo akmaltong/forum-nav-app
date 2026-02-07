@@ -134,13 +134,6 @@ export default function CameraController() {
     animate()
 
     console.log('=== CameraController STARTING ANIMATION ===')
-    console.log('=== CameraController END ===')
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-    }
-
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)

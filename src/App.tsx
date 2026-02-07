@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import Scene3D from './components/Scene3D'
 import UIOverlay from './components/UIOverlay'
 import StoreInitializer from './components/StoreInitializer'
-import { useAppStore } from './store/appStore'
 import { useEventNotifications } from './hooks/useEventNotifications'
 
 function App() {
