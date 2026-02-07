@@ -1,4 +1,4 @@
-import { Fragment, Suspense, useLayoutEffect, useRef } from 'react'
+import { Suspense, useLayoutEffect, useRef } from 'react'
 import {
   Bloom,
   Vignette,
@@ -20,8 +20,6 @@ import { useAppStore } from '../store/appStore'
 import * as THREE from 'three'
 import { HalfFloatType, type WebGLRenderTarget } from 'three'
 
-import { AerialPerspective } from '@takram/three-atmosphere/r3f'
-import { Dithering, LensFlare } from '@takram/three-geospatial-effects/r3f'
 import { reinterpretType } from '@takram/three-geospatial'
 import { mergeRefs } from 'react-merge-refs'
 import invariant from 'tiny-invariant'
@@ -29,7 +27,8 @@ import type { FC, RefAttributes } from 'react'
 
 // Custom EffectComposer wrapper that provides half-float normal buffer
 // Required by AerialPerspective for proper atmospheric scattering
-const AtmosphereEffectComposer: FC<
+// Exported so AtmosphereEffects.tsx can use it too
+export const AtmosphereEffectComposer: FC<
   EffectComposerProps & RefAttributes<EffectComposerImpl>
 > = ({ ref: forwardedRef, enableNormalPass = true, ...props }) => {
   const ref = useRef<EffectComposerImpl>(null)
@@ -51,7 +50,7 @@ const AtmosphereEffectComposer: FC<
   )
 }
 
-// Standard effects pipeline (non-atmosphere mode)
+// Standard effects pipeline (non-atmosphere mode only)
 function StandardEffectsPipeline() {
   const bloomIntensity = useAppStore(state => state.bloomIntensity)
   const bloomThreshold = useAppStore(state => state.bloomThreshold)
@@ -128,106 +127,24 @@ function StandardEffectsPipeline() {
   )
 }
 
-// Atmosphere-aware effects pipeline with AerialPerspective + LensFlare
-function AtmosphereEffectsPipeline() {
-  const bloomIntensity = useAppStore(state => state.bloomIntensity)
-  const bloomThreshold = useAppStore(state => state.bloomThreshold)
-  const vignetteIntensity = useAppStore(state => state.vignetteIntensity)
-  const dofEnabled = useAppStore(state => state.dofEnabled)
-  const dofFocusDistance = useAppStore(state => state.dofFocusDistance)
-  const dofFocalLength = useAppStore(state => state.dofFocalLength)
-  const dofBokehScale = useAppStore(state => state.dofBokehScale)
-  const chromaticAberration = useAppStore(state => state.chromaticAberration)
-  const colorBrightness = useAppStore(state => state.colorBrightness)
-  const colorContrast = useAppStore(state => state.colorContrast)
-  const colorSaturation = useAppStore(state => state.colorSaturation)
-
-  return (
-    <AtmosphereEffectComposer multisampling={0}>
-      <Fragment
-        // Effects are order-dependent; reconstruct nodes when toggles change
-        key={JSON.stringify([bloomIntensity, dofEnabled, chromaticAberration, vignetteIntensity])}
-      >
-        {/* AerialPerspective: atmospheric scattering with sun/sky light in post-process */}
-        <AerialPerspective
-          sunLight={true}
-          skyLight={true}
-          transmittance={true}
-          inscatter={true}
-        />
-
-        {/* LensFlare from the sun */}
-        <LensFlare />
-
-        {/* Standard effects on top */}
-        <Bloom
-          luminanceThreshold={bloomThreshold}
-          mipmapBlur
-          intensity={bloomIntensity}
-          radius={0.7}
-        />
-
-        {dofEnabled ? (
-          <DepthOfField
-            focusDistance={dofFocusDistance}
-            focalLength={dofFocalLength}
-            bokehScale={dofBokehScale}
-          />
-        ) : <></>}
-
-        {chromaticAberration > 0.0001 ? (
-          <ChromaticAberration
-            offset={new THREE.Vector2(chromaticAberration, chromaticAberration)}
-            radialModulation={true}
-            modulationOffset={0.5}
-          />
-        ) : <></>}
-
-        <BrightnessContrast
-          brightness={colorBrightness}
-          contrast={colorContrast}
-        />
-
-        <HueSaturation
-          hue={0}
-          saturation={colorSaturation}
-        />
-
-        {vignetteIntensity > 0.01 ? (
-          <Vignette
-            offset={0.3}
-            darkness={vignetteIntensity}
-            eskil={false}
-          />
-        ) : <></>}
-
-        {/* AGX tone mapping (matches reference) */}
-        <ToneMapping mode={ToneMappingMode.AGX} />
-        <SMAA />
-        <Dithering />
-      </Fragment>
-    </AtmosphereEffectComposer>
-  )
-}
-
 export default function Effects() {
   const graphicsQuality = useAppStore(state => state.graphicsQuality)
   const atmosphereEnabled = useAppStore(state => state.atmosphereEnabled)
   const backgroundMode = useAppStore(state => state.backgroundMode)
 
+  // When atmosphere is active, AtmosphereScene handles its own EffectComposer
+  const isAtmosphereActive = atmosphereEnabled && backgroundMode === 'sky'
+  if (isAtmosphereActive) {
+    return null
+  }
+
   if (graphicsQuality === 'performance') {
     return null
   }
 
-  const isAtmosphereActive = atmosphereEnabled && backgroundMode === 'sky'
-
   return (
     <Suspense fallback={null}>
-      {isAtmosphereActive ? (
-        <AtmosphereEffectsPipeline />
-      ) : (
-        <StandardEffectsPipeline />
-      )}
+      <StandardEffectsPipeline />
     </Suspense>
   )
 }

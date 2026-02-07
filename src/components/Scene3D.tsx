@@ -35,7 +35,7 @@ function HDRIEnvironment() {
   )
 }
 
-// Component to capture OrbitControls ref
+// Component to capture OrbitControls ref (used in non-atmosphere mode)
 function OrbitControlsWithRef({ viewMode }: { viewMode: string }) {
   const controlsRef = useRef<any>(null)
   const { camera } = useThree()
@@ -49,7 +49,6 @@ function OrbitControlsWithRef({ viewMode }: { viewMode: string }) {
       console.log('OrbitControls ref captured')
       setOrbitControls(controls)
 
-      // Add listener for real-time updates
       const handleChange = () => {
         const pos = camera.position
         setCameraPosition([pos.x, pos.y, pos.z])
@@ -78,10 +77,9 @@ function OrbitControlsWithRef({ viewMode }: { viewMode: string }) {
       maxDistance={300}
       maxPolarAngle={Math.PI / 2}
       minPolarAngle={0}
-      enableRotate={!isTopView} // Disable rotation for top view
-      enablePan={!arMode} // Changed to use arMode
+      enableRotate={!isTopView}
+      enablePan={!arMode}
       enableZoom={true}
-      // Adjust zoom speed for orthographic camera if needed
       zoomSpeed={1.0}
     />
   )
@@ -103,7 +101,7 @@ function CameraStateTracker() {
           setCameraTargetPosition([target.x, target.y, target.z] as [number, number, number])
         }
       }
-    }, 100) // Update every 100ms
+    }, 100)
 
     return () => clearInterval(interval)
   }, [camera, setCameraPosition, setCameraTargetPosition])
@@ -112,20 +110,16 @@ function CameraStateTracker() {
 }
 
 // Helper: compute sun position vector from timeOfDay and sunOrientation
-// Real sun arc: rises in the East (~90°), peaks South (180°), sets West (~270°)
-// sunOrientation acts as an offset/rotation of the whole arc
 function useSunPosition() {
   const timeOfDay = useAppStore(state => state.timeOfDay)
   const sunOrientation = useAppStore(state => state.sunOrientation)
 
   const hours = timeOfDay
-  const normalizedTime = Math.max(0, Math.min(1, (hours - 5) / 16)) // 0 at 5AM, 1 at 9PM
+  const normalizedTime = Math.max(0, Math.min(1, (hours - 5) / 16))
 
-  // Elevation: peaks at solar noon (normalizedTime ~0.5)
-  const elevation = Math.sin(normalizedTime * Math.PI) * 80 // max 80 degrees at noon
+  const elevation = Math.sin(normalizedTime * Math.PI) * 80
   const elevationRad = (Math.max(elevation, 2) * Math.PI) / 180
 
-  // Azimuth: sun travels from East (90°) through South (180°) to West (270°)
   const sunAzimuth = 90 + normalizedTime * 180
   const totalAzimuth = sunAzimuth + sunOrientation
   const azimuthRad = (totalAzimuth * Math.PI) / 180
@@ -135,7 +129,6 @@ function useSunPosition() {
   const y = distance * Math.sin(elevationRad)
   const z = distance * Math.cos(elevationRad) * Math.cos(azimuthRad)
 
-  // sunProgress: 0 at sunrise/sunset, 1 at midday
   const sunProgress = Math.max(0, Math.sin(normalizedTime * Math.PI))
 
   return { x, y, z, sunProgress, normalizedTime, elevation }
@@ -196,13 +189,11 @@ function LocalSunLight() {
         shadow-bias={-0.001}
         shadow-normalBias={0.05}
       />
-      {/* Fill light from opposite side */}
       <directionalLight
         position={[-x * 0.5, y * 0.3, -z * 0.5]}
         intensity={intensity * 0.15}
         color="#8090c0"
       />
-      {/* Hemisphere light for better ambient fill */}
       <hemisphereLight
         args={[
           sunProgress > 0.3 ? '#b1e1ff' : '#1a1a3e',
@@ -214,13 +205,12 @@ function LocalSunLight() {
   )
 }
 
-// Night mode lights — building illumination at dusk/night
+// Night mode lights
 function NightLights() {
   const { sunProgress } = useSunPosition()
   const nightLightsEnabled = useAppStore(state => state.nightLightsEnabled)
   const nightLightsIntensity = useAppStore(state => state.nightLightsIntensity)
 
-  // Fade in when sun goes down (sunProgress < 0.3)
   const nightFactor = Math.max(0, 1 - sunProgress / 0.3) * nightLightsIntensity
 
   if (!nightLightsEnabled || nightFactor < 0.01) return null
@@ -247,7 +237,6 @@ function NightLights() {
           decay={2}
         />
       ))}
-      {/* Warm spotlight for entrance area */}
       <spotLight
         position={[0, 15, 25]}
         target-position={[0, 0, 15]}
@@ -289,7 +278,6 @@ function Floor() {
 
   return (
     <>
-      {/* Ground Plane - Receiving Shadows */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.1, 0]} receiveShadow>
         <planeGeometry args={[1000, 1000]} />
         <meshStandardMaterial
@@ -299,8 +287,6 @@ function Floor() {
           metalness={0.8}
         />
       </mesh>
-
-      {/* Grid helper */}
       <gridHelper args={[1000, 100, '#333338', '#222228']} position={[0, -0.05, 0]} />
     </>
   )
@@ -313,12 +299,10 @@ function ToneMappingSync() {
   const graphicsQuality = useAppStore(state => state.graphicsQuality)
 
   useEffect(() => {
-    // When post-processing is active, it handles tone mapping
-    // When in performance mode, use Three.js built-in
     if (graphicsQuality === 'performance') {
       gl.toneMapping = THREE.ACESFilmicToneMapping
     } else {
-      gl.toneMapping = THREE.NoToneMapping // Let postprocessing handle it
+      gl.toneMapping = THREE.NoToneMapping
     }
     gl.toneMappingExposure = toneMappingExposure
   }, [gl, toneMappingExposure, graphicsQuality])
@@ -326,7 +310,9 @@ function ToneMappingSync() {
   return null
 }
 
-// Scene content — everything inside the Canvas
+// Scene content — rendered inside Canvas
+// When atmosphere is active, AtmosphereScene wraps this in EastNorthUpFrame
+// and provides its own OrbitControls, camera, lights, floor (EllipsoidMesh)
 function SceneContent() {
   const viewMode = useAppStore(state => state.viewMode)
   const backgroundMode = useAppStore(state => state.backgroundMode)
@@ -339,26 +325,20 @@ function SceneContent() {
       {/* Sync tone mapping with store */}
       <ToneMappingSync />
 
-      {/* Sky with sun — only when atmosphere is OFF and in sky mode */}
-      {backgroundMode === 'sky' && !atmosphereEnabled && <ProceduralSky />}
-
-      {/* HDRI environment map — background + reflections */}
-      {backgroundMode === 'hdri' && <HDRIEnvironment />}
-
-      {/* Local Sun Light — only when atmosphere is OFF (atmosphere provides its own lighting) */}
-      {!isAtmosphereActive && <LocalSunLight />}
-
-      {/* Night building lights */}
-      <NightLights />
+      {/* === Non-atmosphere mode only: sky, HDRI, lights, floor === */}
+      {!isAtmosphereActive && (
+        <>
+          {backgroundMode === 'sky' && <ProceduralSky />}
+          {backgroundMode === 'hdri' && <HDRIEnvironment />}
+          <LocalSunLight />
+          <NightLights />
+          <Floor />
+          <DynamicContactShadows />
+        </>
+      )}
 
       {/* Real-time Stats */}
       <Stats className="!top-4 !left-auto !right-14 !bottom-auto" />
-
-      {/* Ground and Grid */}
-      <Floor />
-
-      {/* Contact shadows for ground */}
-      <DynamicContactShadows />
 
       {/* 3D Model of Venue */}
       <Suspense fallback={null}>
@@ -371,17 +351,20 @@ function SceneContent() {
       <FriendMarkers />
       <RouteVisualization />
 
-      {/* Controls */}
-      {viewMode === 'first-person' ? (
-        <FirstPersonControls />
-      ) : (
-        <OrbitControlsWithRef viewMode={viewMode} />
+      {/* Controls — in atmosphere mode, AtmosphereScene provides its own OrbitControls */}
+      {!isAtmosphereActive && (
+        <>
+          {viewMode === 'first-person' ? (
+            <FirstPersonControls />
+          ) : (
+            <OrbitControlsWithRef viewMode={viewMode} />
+          )}
+          <CameraStateTracker />
+          <CameraController />
+        </>
       )}
-      <CameraStateTracker />
-      <CameraController />
 
-      {/* Post-processing Effects Pipeline */}
-      {/* This includes AerialPerspective + LensFlare + Dithering when atmosphere is active */}
+      {/* Post-processing — returns null when atmosphere is active */}
       <Effects />
     </>
   )
@@ -390,6 +373,10 @@ function SceneContent() {
 export default function Scene3D() {
   const viewMode = useAppStore(state => state.viewMode)
   const toneMappingExposure = useAppStore(state => state.toneMappingExposure)
+  const atmosphereEnabled = useAppStore(state => state.atmosphereEnabled)
+  const backgroundMode = useAppStore(state => state.backgroundMode)
+
+  const isAtmosphereActive = atmosphereEnabled && backgroundMode === 'sky'
 
   const getCameraPosition = (): [number, number, number] => {
     switch (viewMode) {
@@ -402,43 +389,53 @@ export default function Scene3D() {
     }
   }
 
-  const isOrthographic = viewMode === 'top'
+  const isOrthographic = viewMode === 'top' && !isAtmosphereActive
 
   return (
     <div className="w-full h-full relative">
       <Canvas
-        shadows
+        shadows={!isAtmosphereActive}
         className="w-full h-full"
         gl={{
-          toneMapping: THREE.NoToneMapping, // Postprocessing handles tone mapping
+          // When atmosphere is active: logarithmic depth buffer required for Earth-scale
+          depth: isAtmosphereActive ? false : undefined,
+          logarithmicDepthBuffer: isAtmosphereActive,
+          toneMapping: THREE.NoToneMapping,
           toneMappingExposure: toneMappingExposure,
           outputColorSpace: THREE.SRGBColorSpace,
-          antialias: true,
+          antialias: !isAtmosphereActive,
           powerPreference: 'high-performance',
         }}
+        // When atmosphere is active, use Earth-scale camera range
+        camera={isAtmosphereActive ? { near: 100, far: 1e6 } : undefined}
       >
-        {isOrthographic ? (
-          <OrthographicCamera
-            makeDefault
-            position={[-20, 150, 0]}
-            zoom={1.5}
-            near={0.1}
-            far={1000}
-            up={[0, 1, 0]}
-          />
-        ) : (
-          <PerspectiveCamera
-            key={viewMode}
-            makeDefault
-            position={viewMode === 'first-person' ? undefined : getCameraPosition()}
-            fov={viewMode === 'first-person' ? 75 : 50}
-          />
+        {/* Camera setup for non-atmosphere mode only */}
+        {!isAtmosphereActive && (
+          <>
+            {isOrthographic ? (
+              <OrthographicCamera
+                makeDefault
+                position={[-20, 150, 0]}
+                zoom={1.5}
+                near={0.1}
+                far={1000}
+                up={[0, 1, 0]}
+              />
+            ) : (
+              <PerspectiveCamera
+                key={viewMode}
+                makeDefault
+                position={viewMode === 'first-person' ? undefined : getCameraPosition()}
+                fov={viewMode === 'first-person' ? 75 : 50}
+              />
+            )}
+          </>
         )}
 
-        {/* AtmosphereScene wraps EVERYTHING inside <Atmosphere> context
-            when atmosphere is enabled. It provides sky, stars, sun/sky lights,
-            and its own EffectComposer with AerialPerspective + LensFlare etc.
-            When atmosphere is OFF, children are rendered directly. */}
+        {/* AtmosphereScene wraps everything when atmosphere is enabled.
+            It provides: Atmosphere context, OrbitControls, EastNorthUpFrame,
+            EllipsoidMesh, Sky, Stars, AerialPerspective EffectComposer.
+            When OFF, children are rendered directly. */}
         <AtmosphereScene>
           <SceneContent />
         </AtmosphereScene>

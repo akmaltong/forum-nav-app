@@ -328,7 +328,7 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   // Post-processing / Color Correction
   toneMapping: 'ACES',
   setToneMapping: (mapping) => set({ toneMapping: mapping }),
-  toneMappingExposure: 2,
+  toneMappingExposure: 10,
   setToneMappingExposure: (exposure) => set({ toneMappingExposure: exposure }),
   bloomIntensity: 0.5,
   setBloomIntensity: (intensity) => set({ bloomIntensity: intensity }),

@@ -1,26 +1,48 @@
-import { useRef, useMemo } from 'react'
-import { useFrame } from '@react-three/fiber'
+import { useRef, useMemo, useEffect, useState, type ComponentRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
 import { useAppStore } from '../store/appStore'
 
 import {
   Atmosphere,
   Sky,
   Stars,
-  SunLight,
-  SkyLight,
+  AerialPerspective,
   type AtmosphereApi,
 } from '@takram/three-atmosphere/r3f'
+import {
+  Ellipsoid,
+  Geodetic,
+  PointOfView,
+  radians,
+} from '@takram/three-geospatial'
+import {
+  Dithering,
+  LensFlare,
+} from '@takram/three-geospatial-effects/r3f'
+import { EastNorthUpFrame, EllipsoidMesh } from '@takram/three-geospatial/r3f'
+import { SMAA, ToneMapping } from '@react-three/postprocessing'
+import { ToneMappingMode } from 'postprocessing'
+import { Fragment } from 'react'
+
+import { AtmosphereEffectComposer } from './Effects'
+import { setOrbitControls } from './CameraController'
+
+// Moscow coordinates: 55.75°N, 37.62°E, altitude 200m (building height)
+const geodetic = new Geodetic(radians(37.62), radians(55.75), 200)
+const position = geodetic.toECEF()
 
 // ============================================================================
-// AtmosphereScene — Wraps the entire scene in <Atmosphere> context.
+// AtmosphereScene — Full geospatial atmosphere scene
 //
-// Uses @takram/three-atmosphere for physically-accurate:
-//   - Sky dome (Bruneton 2017 precomputed atmospheric scattering)
-//   - Star field (from stars.bin catalog)
-//   - Sun directional light (position computed from date/time)
-//   - Sky ambient light (irradiance from sky hemisphere)
+// When atmosphere is active, replaces the entire scene setup with:
+// - Earth-scale coordinate system (ECEF + ENU frame)
+// - Physically-accurate sky, stars, sun/sky light
+// - AerialPerspective post-processing for atmospheric scattering
+// - LensFlare, Dithering, AGX tone mapping
+// - EllipsoidMesh for Earth ground surface
 //
-// The EffectComposer with ToneMapping/SMAA/AerialPerspective is in Effects.tsx.
+// When atmosphere is OFF, just passes children through.
 // ============================================================================
 
 interface AtmosphereSceneProps {
@@ -33,30 +55,59 @@ export function AtmosphereScene({ children }: AtmosphereSceneProps) {
   const sunOrientation = useAppStore(state => state.sunOrientation)
   const atmosphereEnabled = useAppStore(state => state.atmosphereEnabled)
   const backgroundMode = useAppStore(state => state.backgroundMode)
+  const setCameraPosition = useAppStore(state => state.setCameraPosition)
+  const setCameraTargetPosition = useAppStore(state => state.setCameraTargetPosition)
 
   const isActive = atmosphereEnabled && backgroundMode === 'sky'
 
-  // Compute a Date from timeOfDay + sunOrientation
-  // Following the reference implementation's approach:
-  // - timeOfDay controls the hour (0-24)
-  // - sunOrientation varies the day-of-year for azimuth variety
+  // Compute date from timeOfDay + sunOrientation (same as reference)
   const targetDate = useMemo(() => {
     const year = new Date().getFullYear()
-    // Use UTC-based epoch like the reference to avoid timezone issues
     const epoch = Date.UTC(year, 0, 1, 0, 0, 0, 0)
-    // sunOrientation maps to day-of-year (0-365)
     const dayOfYear = Math.floor((sunOrientation / 360) * 365) + 1
-    // Convert timeOfDay (0-24) to milliseconds offset
     const ms = epoch + (dayOfYear * 24 + timeOfDay) * 3600000
     return new Date(ms)
   }, [timeOfDay, sunOrientation])
 
+  // Setup camera position using PointOfView (same as reference)
+  const camera = useThree(({ camera }) => camera)
+  const [controls, setControls] = useState<ComponentRef<typeof OrbitControls> | null>(null)
+
+  useEffect(() => {
+    if (!isActive) return
+    // Position camera looking at the building from above at an angle
+    const pov = new PointOfView(800, radians(-90), radians(-25))
+    pov.decompose(position, camera.position, camera.quaternion, camera.up)
+    if (controls != null) {
+      controls.target.copy(position)
+      controls.update()
+      setOrbitControls(controls)
+
+      // Sync store with initial camera position
+      const pos = camera.position
+      setCameraPosition([pos.x, pos.y, pos.z])
+      setCameraTargetPosition([position.x, position.y, position.z])
+
+      // Track changes
+      const handleChange = () => {
+        const p = camera.position
+        setCameraPosition([p.x, p.y, p.z])
+        if (controls.target) {
+          setCameraTargetPosition([controls.target.x, controls.target.y, controls.target.z])
+        }
+      }
+      controls.addEventListener('change', handleChange)
+      return () => {
+        controls.removeEventListener('change', handleChange)
+      }
+    }
+  }, [camera, controls, isActive, setCameraPosition, setCameraTargetPosition])
+
+  // Update atmosphere date every frame
   useFrame(({ gl }) => {
-    // Sync exposure
     const exposure = useAppStore.getState().toneMappingExposure
     gl.toneMappingExposure = exposure
 
-    // Update sun/moon position from date
     if (atmosphereRef.current && isActive) {
       atmosphereRef.current.updateByDate(targetDate)
     }
@@ -69,16 +120,37 @@ export function AtmosphereScene({ children }: AtmosphereSceneProps) {
 
   return (
     <Atmosphere ref={atmosphereRef} correctAltitude>
-      {/* Sky dome — physically-accurate atmospheric scattering background */}
+      <OrbitControls ref={setControls} />
+
+      {/* Background: physically-accurate sky dome + stars */}
       <Sky />
       <Stars data="atmosphere/stars.bin" />
 
-      {/* Physical sun and sky light sources */}
-      <SunLight intensity={2} castShadow />
-      <SkyLight intensity={0.5} />
+      {/* Earth ground surface */}
+      <EllipsoidMesh args={[Ellipsoid.WGS84.radii, 360, 180]}>
+        <meshBasicMaterial color="gray" />
+      </EllipsoidMesh>
 
-      {/* All scene content goes here */}
-      {children}
+      {/* All scene content in East-North-Up frame at Moscow */}
+      <EastNorthUpFrame {...geodetic}>
+        {children}
+      </EastNorthUpFrame>
+
+      {/* Post-processing: AerialPerspective + LensFlare + ToneMapping */}
+      <AtmosphereEffectComposer multisampling={0}>
+        <Fragment key="atmosphere-effects">
+          <AerialPerspective
+            sunLight={true}
+            skyLight={true}
+            transmittance={true}
+            inscatter={true}
+          />
+          <LensFlare />
+          <ToneMapping mode={ToneMappingMode.AGX} />
+          <SMAA />
+          <Dithering />
+        </Fragment>
+      </AtmosphereEffectComposer>
     </Atmosphere>
   )
 }
