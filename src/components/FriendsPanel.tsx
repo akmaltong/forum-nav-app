@@ -10,10 +10,16 @@ export default function FriendsPanel() {
 
   const handleNavigateToFriend = (friend: typeof friends[0]) => {
     const userLocation = useAppStore.getState().userLocation
+    const lastRouteDestination = useAppStore.getState().lastRouteDestination
+    const setLastRouteDestination = useAppStore.getState().setLastRouteDestination
 
-    if (userLocation) {
-      const route = calculateRoute(userLocation.position, friend.location.position)
+    // Use last destination if exists, otherwise use user location
+    const startPosition = lastRouteDestination || userLocation?.position
+
+    if (startPosition) {
+      const route = calculateRoute(startPosition, friend.location.position)
       setRoute(route)
+      setLastRouteDestination(friend.location.position) // Save destination for next route
 
       setActivePanel(null)
     }

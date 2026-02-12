@@ -19,6 +19,9 @@ export default function ZoneDetailOverlay() {
   const events = useAppStore(state => state.events)
   const userLocation = useAppStore(state => state.userLocation)
   const setRoute = useAppStore(state => state.setRoute)
+  const currentRoute = useAppStore(state => state.currentRoute)
+  const lastRouteDestination = useAppStore(state => state.lastRouteDestination)
+  const setLastRouteDestination = useAppStore(state => state.setLastRouteDestination)
   const setCameraTarget = useAppStore(state => state.setCameraTarget)
   const setActivePanel = useAppStore(state => state.setActivePanel)
   const setViewMode = useAppStore(state => state.setViewMode)
@@ -33,15 +36,25 @@ export default function ZoneDetailOverlay() {
   const pastEvents = zoneEvents.filter(e => isPast(e.endTime))
 
   const handleNavigate = () => {
-    if (userLocation) {
-      const route = calculateRoute(userLocation.position, selectedZone.position)
+    // Use last destination if exists, otherwise use user location
+    const startPosition = lastRouteDestination || userLocation?.position
+    
+    if (startPosition) {
+      const route = calculateRoute(startPosition, selectedZone.position)
       setRoute(route)
+      setLastRouteDestination(selectedZone.position) // Save destination for next route
 
       setCameraTarget(null)
 
       setSelectedZone(null)
       setActivePanel(null)
     }
+  }
+
+  const handleCancelRoute = () => {
+    setRoute(null)
+    setLastRouteDestination(null) // Reset to start from user location again
+    setSelectedZone(null)
   }
 
   return (
@@ -80,8 +93,8 @@ export default function ZoneDetailOverlay() {
         </button>
       </div>
 
-      {/* Navigation Button */}
-      <div className="px-4 py-3 shrink-0">
+      {/* Navigation Buttons */}
+      <div className="px-4 py-3 shrink-0 space-y-2">
         <button
           onClick={handleNavigate}
           className="w-full bg-white/10 hover:bg-white/15 text-white py-2.5 rounded-xl font-semibold transition-all active:scale-[0.98] border border-white/[0.08] flex items-center justify-center gap-2 text-sm"
@@ -91,6 +104,19 @@ export default function ZoneDetailOverlay() {
           </svg>
           <span>Проложить маршрут</span>
         </button>
+        
+        {currentRoute && (
+          <button
+            onClick={handleCancelRoute}
+            className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 py-2.5 rounded-xl font-semibold transition-all active:scale-[0.98] border border-red-500/20 flex items-center justify-center gap-2 text-sm"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span>Отменить маршрут</span>
+          </button>
+        )}
       </div>
 
       {/* Events List */}

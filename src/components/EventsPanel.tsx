@@ -46,12 +46,20 @@ export default function EventsPanel() {
   const handleNavigateToEvent = (event: typeof events[0]) => {
     const zone = zones.find(z => z.id === event.zoneId)
     const userLocation = useAppStore.getState().userLocation
+    const lastRouteDestination = useAppStore.getState().lastRouteDestination
+    const setLastRouteDestination = useAppStore.getState().setLastRouteDestination
 
-    if (zone && userLocation) {
-      const route = calculateRoute(userLocation.position, zone.position)
-      setRoute(route)
+    if (zone) {
+      // Use last destination if exists, otherwise use user location
+      const startPosition = lastRouteDestination || userLocation?.position
+      
+      if (startPosition) {
+        const route = calculateRoute(startPosition, zone.position)
+        setRoute(route)
+        setLastRouteDestination(zone.position) // Save destination for next route
 
-      setActivePanel(null)
+        setActivePanel(null)
+      }
     }
   }
 

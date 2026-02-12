@@ -37,6 +37,8 @@ interface AppState {
   setRoute: (route: Route | null) => void
   isNavigating: boolean
   setIsNavigating: (isNavigating: boolean) => void
+  lastRouteDestination: [number, number, number] | null
+  setLastRouteDestination: (position: [number, number, number] | null) => void
 
   // UI
   viewMode: ViewMode
@@ -262,6 +264,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setRoute: (route) => set({ currentRoute: route }),
   isNavigating: false,
   setIsNavigating: (isNavigating) => set({ isNavigating }),
+  lastRouteDestination: null,
+  setLastRouteDestination: (position) => set({ lastRouteDestination: position }),
 
   // UI
   viewMode: 'angle', // Главный вид - перспектива
