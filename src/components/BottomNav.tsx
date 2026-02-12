@@ -120,7 +120,7 @@ export default function BottomNav() {
   }
 
   return (
-    <div className="flex justify-center px-2 sm:px-0" style={{ paddingBottom: 'max(20px, calc(env(safe-area-inset-bottom) + 12px))' }}>
+    <div className="flex justify-center px-2 sm:px-0" style={{ paddingBottom: '32px' }}>
       <div className="mb-4 sm:mb-5 flex items-center gap-1.5">
         {buttons.map(button => {
           const active = isActive(button.id)

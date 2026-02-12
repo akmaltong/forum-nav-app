@@ -85,6 +85,16 @@ export default function UIOverlay() {
         <div className="text-[9px] text-white/30 font-mono tracking-wide">v1.2.0</div>
       </div>
 
+      {/* Mini map - aligned with header text */}
+      {showMiniMapVisible && (
+        <div
+          className="absolute top-3 sm:top-4 right-3 sm:right-4 pointer-events-auto scale-50 sm:scale-75 origin-top-right transition-opacity duration-500 pt-safe pr-safe"
+          style={{ opacity: 0.6 }}
+        >
+          <MiniMap />
+        </div>
+      )}
+
       {/* Floating bottom panels */}
       {activeBottomPanel === 'lighting' && <AdjustmentsPanel />}
       {activeBottomPanel === 'settings' && <SettingsPanel />}
@@ -94,16 +104,6 @@ export default function UIOverlay() {
 
       {/* Zone Details */}
       <ZoneDetailOverlay />
-
-      {/* Mini map - visible when no panels/overlays are open, not in first-person mode */}
-      {showMiniMapVisible && (
-        <div
-          className="absolute top-3 right-4 pointer-events-auto scale-50 sm:scale-75 origin-top-right transition-opacity duration-500"
-          style={{ opacity: 0.6 }}
-        >
-          <MiniMap />
-        </div>
-      )}
 
       {/* Side panels with smooth open/close animation */}
       <div 
@@ -132,8 +132,8 @@ export default function UIOverlay() {
         />
       )}
 
-      {/* Bottom navigation - always visible */}
-      <div className="absolute left-0 right-0 pointer-events-auto z-50" style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}>
+      {/* Bottom navigation - always visible with extra padding */}
+      <div className="absolute left-0 right-0 pointer-events-auto z-50" style={{ bottom: '0' }}>
         <BottomNav />
       </div>
     </div>
