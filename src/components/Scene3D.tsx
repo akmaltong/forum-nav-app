@@ -142,7 +142,7 @@ function SceneContent() {
         position={[lightX, lightY, lightZ]}
         intensity={2.0}
         castShadow
-        shadow-mapSize={[4096, 4096]}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-150}
         shadow-camera-right={150}
         shadow-camera-top={150}
@@ -151,7 +151,7 @@ function SceneContent() {
         shadow-camera-far={500}
         shadow-bias={-0.0001}
         shadow-normalBias={0.02}
-        shadow-radius={3}
+        shadow-radius={2}
       />
 
       {/* Contact Shadows for better ground contact */}
@@ -160,9 +160,9 @@ function SceneContent() {
           position={[0, -0.5, 0]}
           opacity={0.35}
           scale={300}
-          blur={3.5}
+          blur={2.5}
           far={100}
-          resolution={1024}
+          resolution={512}
           color="#000000"
         />
       )}
@@ -280,6 +280,10 @@ export default function Scene3D() {
           state.gl.shadowMap.type = THREE.PCFSoftShadowMap
           state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
           
+          // Performance optimizations
+          state.gl.powerPreference = 'high-performance'
+          state.gl.antialias = true
+          
           // Ensure proper initial sizing
           state.gl.setSize(window.innerWidth, window.innerHeight)
           if (state.camera instanceof THREE.PerspectiveCamera) {
@@ -287,6 +291,7 @@ export default function Scene3D() {
             state.camera.updateProjectionMatrix()
           }
         }}
+        dpr={[1, 2]} // Limit pixel ratio for performance
       >
         {/* Camera setup */}
         {isOrthographic ? (

@@ -22,12 +22,12 @@ function EffectsPipeline() {
   const vignetteIntensity = useAppStore(state => state.vignetteIntensity)
 
   return (
-    <R3FEffectComposer multisampling={8} enableNormalPass>
+    <R3FEffectComposer multisampling={4} enableNormalPass={ssaaoEnabled}>
       {/* SSAO - Optimized settings for architectural geometry */}
       {ssaaoEnabled && (
         <SSAO
-          samples={32}
-          rings={4}
+          samples={16}
+          rings={3}
           distanceThreshold={0.5}
           distanceFalloff={0.1}
           rangeThreshold={0.015}
@@ -43,7 +43,7 @@ function EffectsPipeline() {
       {/* Bloom for emissive materials */}
       <Bloom
         luminanceThreshold={bloomThreshold}
-        mipmapBlur={false}
+        mipmapBlur={true}
         intensity={bloomIntensity}
         radius={0.5}
       />
@@ -73,7 +73,7 @@ function EffectsPipeline() {
         />
       )}
 
-      {/* Anti-aliasing with higher quality */}
+      {/* Anti-aliasing with optimized quality */}
       <SMAA />
     </R3FEffectComposer>
   )
