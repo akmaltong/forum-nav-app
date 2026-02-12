@@ -60,12 +60,13 @@ function App() {
               }}
             />
             
-            {/* Inner pulsing circle */}
-            <div 
-              className="w-12 h-12 rounded-full"
+            {/* Logo image */}
+            <img 
+              src="/logo.ico" 
+              alt="SDVT Logo" 
+              className="w-16 h-16 object-contain"
               style={{
-                background: 'linear-gradient(135deg, #D4AF37 0%, #F4E8C1 50%, #D4AF37 100%)',
-                boxShadow: '0 0 20px rgba(212,175,55,0.5)',
+                filter: 'drop-shadow(0 0 10px rgba(212,175,55,0.3))',
                 animation: 'pulse 2s ease-in-out infinite',
               }}
             />
