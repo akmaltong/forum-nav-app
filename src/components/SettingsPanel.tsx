@@ -336,7 +336,7 @@ export default function SettingsPanel() {
               <SettingsSlider label="Виньетка" value={store.vignetteIntensity} min={0} max={0.5} step={0.01} onChange={store.setVignetteIntensity} />
             </div>
 
-            {/* Color correction */}
+            {/* Color correction and UI */}
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginBottom: '10px' }}>
                 Коррекция цвета
@@ -344,6 +344,13 @@ export default function SettingsPanel() {
               <SettingsSlider label="Яркость" value={store.colorBrightness} min={0} max={0.3} step={0.01} onChange={store.setColorBrightness} />
               <SettingsSlider label="Контраст" value={store.colorContrast} min={0} max={0.3} step={0.01} onChange={store.setColorContrast} />
               <SettingsSlider label="Насыщенность" value={store.colorSaturation} min={0} max={0.3} step={0.01} onChange={store.setColorSaturation} />
+              
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px', textTransform: 'uppercase' as const, marginBottom: '10px' }}>
+                  Интерфейс
+                </div>
+                <SettingsToggle label="Показать FPS" value={store.showFPS} onChange={store.toggleFPS} />
+              </div>
             </div>
           </div>
         )}

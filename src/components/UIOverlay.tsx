@@ -12,11 +12,13 @@ import ZoneEditor from './ZoneEditor'
 import ZoneDetailOverlay from './ZoneDetailOverlay'
 import ARView from './ARView'
 import SettingsPanel from './SettingsPanel'
+import { FPSDisplay } from './FPSCounter'
 
 export default function UIOverlay() {
   const activePanel = useAppStore(state => state.activePanel)
   const arMode = useAppStore(state => state.arMode)
   const showMiniMap = useAppStore(state => state.showMiniMap)
+  const showFPS = useAppStore(state => state.showFPS)
   const activeBottomPanel = useAppStore(state => state.activeBottomPanel)
   const viewMode = useAppStore(state => state.viewMode)
   const selectedZone = useAppStore(state => state.selectedZone)
@@ -83,6 +85,7 @@ export default function UIOverlay() {
           <span className="text-gray-300 text-xs sm:text-sm font-medium">3D Navigation</span>
         </div>
         <div className="text-[9px] text-white/30 font-mono tracking-wide">v1.2.0</div>
+        {showFPS && <FPSDisplay />}
       </div>
 
       {/* Mini map - aligned with header text */}

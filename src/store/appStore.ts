@@ -47,6 +47,8 @@ interface AppState {
   toggleMiniMap: () => void
   showPOI: boolean
   togglePOI: () => void
+  showFPS: boolean
+  toggleFPS: () => void
 
   // Camera
   cameraTarget: string | null
@@ -270,6 +272,8 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   toggleMiniMap: () => set((state) => ({ showMiniMap: !state.showMiniMap })),
   showPOI: false,
   togglePOI: () => set((state) => ({ showPOI: !state.showPOI })),
+  showFPS: false,
+  toggleFPS: () => set((state) => ({ showFPS: !state.showFPS })),
 
   // AR
   arMode: false,

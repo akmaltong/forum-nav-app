@@ -11,10 +11,10 @@ export default function MiniMap() {
     const scale = 2
     const offsetX = 100
     const offsetY = 100
-    // Rotate 270 degrees counterclockwise (or 90 clockwise): new_x = z, new_y = -x
+    // Rotate 90 degrees clockwise: new_x = -z, new_y = -x (flip both to point up)
     return [
-      offsetX + pos[2] * scale,  // Z becomes X (pointing up)
-      offsetY + pos[0] * scale   // -X becomes Y
+      offsetX - pos[2] * scale,  // -Z becomes X
+      offsetY + pos[0] * scale   // X becomes Y (inverted)
     ]
   }
   
