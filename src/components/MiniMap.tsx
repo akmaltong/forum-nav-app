@@ -11,10 +11,10 @@ export default function MiniMap() {
     const scale = 2
     const offsetX = 100
     const offsetY = 100
-    // No rotation - direct mapping: X -> X, Z -> Y (inverted for screen coords)
+    // Rotate 90 degrees counterclockwise: new_x = -z, new_y = x
     return [
-      offsetX + pos[0] * scale,  // X stays as X
-      offsetY - pos[2] * scale   // -Z becomes Y (up is negative in screen coords)
+      offsetX - pos[2] * scale,  // -Z becomes X (pointing up)
+      offsetY - pos[0] * scale   // -X becomes Y
     ]
   }
   

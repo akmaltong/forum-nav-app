@@ -142,7 +142,7 @@ function SceneContent() {
         position={[lightX, lightY, lightZ]}
         intensity={2.0}
         castShadow
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-150}
         shadow-camera-right={150}
         shadow-camera-top={150}
@@ -158,11 +158,11 @@ function SceneContent() {
       {contactShadowsEnabled && (
         <ContactShadows
           position={[0, -0.5, 0]}
-          opacity={0.35}
+          opacity={0.3}
           scale={300}
-          blur={2.5}
+          blur={2}
           far={100}
-          resolution={512}
+          resolution={256}
           color="#000000"
         />
       )}

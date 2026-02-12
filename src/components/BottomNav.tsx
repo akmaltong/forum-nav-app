@@ -120,8 +120,8 @@ export default function BottomNav() {
   }
 
   return (
-    <div className="flex justify-center px-2 sm:px-0" style={{ paddingBottom: '42px' }}>
-      <div className="mb-4 sm:mb-5 flex items-center gap-1.5">
+    <div className="flex justify-center px-2 sm:px-0" style={{ paddingBottom: '60px' }}>
+      <div className="mb-2 flex items-center gap-1.5">
         {buttons.map(button => {
           const active = isActive(button.id)
           return (

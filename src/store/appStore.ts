@@ -372,7 +372,7 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setStudioLightColor: (color) => set({ studioLightColor: color }),
   
   // Global Effects
-  ssaaoEnabled: true,
+  ssaaoEnabled: false, // Disabled by default for better performance
   setSsaaoEnabled: (enabled) => set({ ssaaoEnabled: enabled }),
 
   // Shadow Controls

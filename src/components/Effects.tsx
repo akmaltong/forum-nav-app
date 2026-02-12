@@ -22,7 +22,7 @@ function EffectsPipeline() {
   const vignetteIntensity = useAppStore(state => state.vignetteIntensity)
 
   return (
-    <R3FEffectComposer multisampling={4} enableNormalPass={ssaaoEnabled}>
+    <R3FEffectComposer multisampling={2} enableNormalPass={ssaaoEnabled}>
       {/* SSAO - Optimized settings for architectural geometry */}
       {ssaaoEnabled && (
         <SSAO
