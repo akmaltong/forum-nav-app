@@ -142,16 +142,15 @@ function SceneContent() {
         position={[lightX, lightY, lightZ]}
         intensity={2.0}
         castShadow
-        shadow-mapSize={[1024, 1024]}
+        shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-150}
         shadow-camera-right={150}
         shadow-camera-top={150}
         shadow-camera-bottom={-150}
         shadow-camera-near={1}
         shadow-camera-far={500}
-        shadow-bias={-0.0001}
-        shadow-normalBias={0.02}
-        shadow-radius={2}
+        shadow-bias={-0.0005}
+        shadow-normalBias={0.05}
       />
 
       {/* Contact Shadows for better ground contact */}
@@ -162,7 +161,7 @@ function SceneContent() {
           scale={300}
           blur={2}
           far={100}
-          resolution={256}
+          resolution={512}
           color="#000000"
         />
       )}
