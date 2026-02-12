@@ -87,10 +87,12 @@ export default function ZonesPanel() {
               onClick={() => {
                 if (!isExpanded) {
                   setExpandedZoneId(zone.id)
-                  // Fly camera to zone but keep panel open
+                  // Fly camera to zone and close panel
                   setViewMode('angle')
                   const { setCameraTarget } = useAppStore.getState()
                   setCameraTarget(zone.id)
+                  // Close the zones panel
+                  setActivePanel(null)
                 } else {
                   setExpandedZoneId(null)
                 }
@@ -99,8 +101,8 @@ export default function ZonesPanel() {
               <div className="flex items-center gap-2">
                 <span className="text-sm shrink-0">{zoneIcon(zone.type)}</span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-semibold text-xs leading-tight truncate text-gray-100">{zone.name}</h3>
-                  <p className="text-[10px] text-gray-500 truncate">{zone.description}</p>
+                  <h3 className="font-semibold text-xs leading-tight truncate text-white">{zone.name}</h3>
+                  <p className="text-[10px] text-gray-400 truncate">{zone.description}</p>
                 </div>
                 {zoneEvents.length > 0 && (
                   <span className="text-[9px] bg-white/10 text-gray-400 px-1.5 py-0.5 rounded-md shrink-0">
@@ -128,8 +130,8 @@ export default function ZonesPanel() {
                           <div key={event.id} className="bg-white/5 rounded-lg px-2 py-1.5 border border-white/[0.04]">
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-[10px] text-gray-200 truncate">{event.title}</div>
-                                <div className="text-[9px] text-gray-500">
+                                <div className="font-medium text-[10px] text-white truncate">{event.title}</div>
+                                <div className="text-[9px] text-gray-400">
                                   {new Date(event.startTime).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                               </div>

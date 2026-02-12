@@ -6,14 +6,15 @@ export default function MiniMap() {
   const selectedZone = useAppStore(state => state.selectedZone)
   const currentRoute = useAppStore(state => state.currentRoute)
   
-  // Convert 3D coordinates to 2D minimap coordinates
+  // Convert 3D coordinates to 2D minimap coordinates with rotation
   const to2D = (pos: [number, number, number]): [number, number] => {
     const scale = 2
     const offsetX = 100
     const offsetY = 100
+    // Rotate 90 degrees counterclockwise so "head" points up
     return [
-      offsetX + pos[0] * scale,
-      offsetY + pos[2] * scale
+      offsetX - pos[2] * scale,  // Swap and negate Z for rotation
+      offsetY + pos[0] * scale   // Use X for Y
     ]
   }
   

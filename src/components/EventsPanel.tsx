@@ -131,8 +131,8 @@ export default function EventsPanel() {
               >
                 <div className="flex justify-between items-center">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs leading-tight truncate text-gray-100">{event.title}</h3>
-                    <div className="flex items-center gap-1.5 text-[10px] text-gray-500 mt-0.5">
+                    <h3 className="font-semibold text-xs leading-tight truncate text-white">{event.title}</h3>
+                    <div className="flex items-center gap-1.5 text-[10px] text-gray-400 mt-0.5">
                       <span>{format(event.startTime, 'HH:mm')} - {format(event.endTime, 'HH:mm')}</span>
                       {zone && (
                         <>

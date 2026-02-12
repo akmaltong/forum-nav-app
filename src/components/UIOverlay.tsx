@@ -98,7 +98,7 @@ export default function UIOverlay() {
       {/* Mini map - visible when no panels/overlays are open, not in first-person mode */}
       {showMiniMapVisible && (
         <div
-          className="absolute top-4 right-4 pointer-events-auto mt-8 scale-50 sm:scale-75 origin-top-right transition-opacity duration-500"
+          className="absolute top-3 right-4 pointer-events-auto scale-50 sm:scale-75 origin-top-right transition-opacity duration-500"
           style={{ opacity: 0.6 }}
         >
           <MiniMap />
@@ -133,7 +133,7 @@ export default function UIOverlay() {
       )}
 
       {/* Bottom navigation - always visible */}
-      <div className="absolute bottom-0 left-0 right-0 pointer-events-auto z-50">
+      <div className="absolute left-0 right-0 pointer-events-auto z-50" style={{ bottom: 'max(0px, env(safe-area-inset-bottom))' }}>
         <BottomNav />
       </div>
     </div>

@@ -1,6 +1,5 @@
 import { useAppStore } from '../store/appStore'
 import { calculateRoute } from '../utils/navigation'
-import { createNavigationNotification } from '../utils/notifications'
 
 export default function FriendsPanel() {
   const friends = useAppStore(state => state.friends)
@@ -15,9 +14,6 @@ export default function FriendsPanel() {
     if (userLocation) {
       const route = calculateRoute(userLocation.position, friend.location.position)
       setRoute(route)
-
-      const { addNotification } = useAppStore.getState()
-      addNotification(createNavigationNotification(friend.name, route.distance, route.estimatedTime))
 
       setActivePanel(null)
     }

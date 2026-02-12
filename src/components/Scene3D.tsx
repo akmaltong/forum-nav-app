@@ -208,6 +208,24 @@ export default function Scene3D() {
     console.log('Camera position:', camPos)
   }, [viewMode])
 
+  // Handle window resize to ensure proper canvas sizing
+  useEffect(() => {
+    const handleResize = () => {
+      // Force canvas to recalculate size
+      const canvas = document.querySelector('canvas')
+      if (canvas) {
+        canvas.style.width = '100%'
+        canvas.style.height = '100%'
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    // Initial call
+    handleResize()
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Close bottom panels on click in empty space
   const handleSceneClick = () => {
     if (activeBottomPanel) {
@@ -246,7 +264,7 @@ export default function Scene3D() {
       <Canvas
         shadows
         className="w-full h-full"
-        style={{ background: '#0a0a0f' }}
+        style={{ background: '#0a0a0f', display: 'block', width: '100%', height: '100%' }}
         gl={{
           toneMapping: getToneMapping(),
           toneMappingExposure: toneMappingExposure,
@@ -261,6 +279,13 @@ export default function Scene3D() {
           state.gl.shadowMap.enabled = true
           state.gl.shadowMap.type = THREE.PCFSoftShadowMap
           state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+          
+          // Ensure proper initial sizing
+          state.gl.setSize(window.innerWidth, window.innerHeight)
+          if (state.camera instanceof THREE.PerspectiveCamera) {
+            state.camera.aspect = window.innerWidth / window.innerHeight
+            state.camera.updateProjectionMatrix()
+          }
         }}
       >
         {/* Camera setup */}

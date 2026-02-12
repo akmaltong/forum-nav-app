@@ -1,7 +1,6 @@
 import { useAppStore } from '../store/appStore'
 import { format, isPast, isFuture, isWithinInterval } from 'date-fns'
 import { calculateRoute } from '../utils/navigation'
-import { createNavigationNotification } from '../utils/notifications'
 
 const zoneIcon = (type: string) => {
   switch (type) {
@@ -21,7 +20,6 @@ export default function ZoneDetailOverlay() {
   const userLocation = useAppStore(state => state.userLocation)
   const setRoute = useAppStore(state => state.setRoute)
   const setCameraTarget = useAppStore(state => state.setCameraTarget)
-  const addNotification = useAppStore(state => state.addNotification)
   const setActivePanel = useAppStore(state => state.setActivePanel)
   const setViewMode = useAppStore(state => state.setViewMode)
 
@@ -38,7 +36,6 @@ export default function ZoneDetailOverlay() {
     if (userLocation) {
       const route = calculateRoute(userLocation.position, selectedZone.position)
       setRoute(route)
-      addNotification(createNavigationNotification(selectedZone.name, route.distance, route.estimatedTime))
 
       setCameraTarget(null)
 

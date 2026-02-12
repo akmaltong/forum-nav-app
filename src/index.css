@@ -26,6 +26,13 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+}
+
 body {
   font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -33,12 +40,19 @@ body {
   overflow: hidden;
   background: var(--bg-dark);
   color: var(--text-primary);
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 #root {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 /* Prevent zoom on mobile */
