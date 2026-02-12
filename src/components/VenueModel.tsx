@@ -30,7 +30,7 @@ function LoadedModel() {
       metalness: materialMetalness,
       envMapIntensity: 1.2,
       flatShading: false,
-      side: THREE.FrontSide,
+      side: THREE.DoubleSide, // Double-sided to fix inverted normals
       // Enable better normal mapping for SSAO
       normalMapType: THREE.TangentSpaceNormalMap,
     })
