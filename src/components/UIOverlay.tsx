@@ -136,7 +136,7 @@ export default function UIOverlay() {
       )}
 
       {/* Bottom navigation - always visible with extra padding */}
-      <div className="absolute left-0 right-0 pointer-events-auto z-50" style={{ bottom: '0' }}>
+      <div className="absolute left-0 right-0 pointer-events-auto z-50" style={{ bottom: '-42px' }}>
         <BottomNav />
       </div>
     </div>
