@@ -80,57 +80,6 @@ export default function UIOverlay() {
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Fullscreen UI toggle button - always visible in fullscreen */}
-      {isFullscreen && (
-        <div className="absolute pointer-events-auto" style={{ bottom: '20px', right: '20px', zIndex: 9999 }}>
-          <button
-            onClick={toggleUIInFullscreen}
-            className="transition-all duration-300 hover:scale-110 active:scale-95 relative"
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              backgroundColor: showUIInFullscreen ? 'rgba(212, 175, 55, 0.9)' : 'rgba(40, 40, 40, 0.95)',
-              backdropFilter: 'blur(12px)',
-              border: showUIInFullscreen ? '2px solid rgba(212, 175, 55, 1)' : '2px solid rgba(255,255,255,0.3)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6), 0 0 20px rgba(212, 175, 55, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              animation: showUIInFullscreen ? 'none' : 'pulse 2s infinite',
-            }}
-            title={showUIInFullscreen ? 'Скрыть UI' : 'Показать UI'}
-          >
-            {showUIInFullscreen ? (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            ) : (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="3" y1="12" x2="21" y2="12" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <line x1="3" y1="18" x2="21" y2="18" />
-              </svg>
-            )}
-          </button>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.8;
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
-
       {shouldShowUI && (
         <>
           {/* Top bar with notifications */}

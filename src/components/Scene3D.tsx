@@ -230,14 +230,14 @@ export default function Scene3D() {
   // Handle fullscreen toggle on double click
   useEffect(() => {
     const handleDoubleClick = () => {
-      const canvas = document.querySelector('canvas')
-      if (!canvas) return
-
       if (!document.fullscreenElement) {
-        // Enter fullscreen
-        canvas.requestFullscreen().catch(err => {
-          console.log(`Error attempting to enable fullscreen: ${err.message}`)
-        })
+        // Enter fullscreen on root element, not canvas
+        const root = document.getElementById('root')
+        if (root) {
+          root.requestFullscreen().catch(err => {
+            console.log(`Error attempting to enable fullscreen: ${err.message}`)
+          })
+        }
       } else {
         // Exit fullscreen
         document.exitFullscreen()
@@ -248,6 +248,7 @@ export default function Scene3D() {
     const handleFullscreenChange = () => {
       const isFullscreen = !!document.fullscreenElement
       setIsFullscreen(isFullscreen)
+      console.log('Fullscreen changed:', isFullscreen)
       
       const canvas = document.querySelector('canvas')
       if (canvas) {

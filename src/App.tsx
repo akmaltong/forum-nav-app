@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Scene3D from './components/Scene3D'
 import UIOverlay from './components/UIOverlay'
 import StoreInitializer from './components/StoreInitializer'
+import FullscreenToggle from './components/FullscreenToggle'
 import { useEventNotifications } from './hooks/useEventNotifications'
 
 function App() {
@@ -46,6 +47,7 @@ function App() {
       <StoreInitializer />
       <Scene3D />
       <UIOverlay />
+      <FullscreenToggle />
     </div>
   )
 }
