@@ -51,6 +51,10 @@ interface AppState {
   togglePOI: () => void
   showFPS: boolean
   toggleFPS: () => void
+  isFullscreen: boolean
+  setIsFullscreen: (fullscreen: boolean) => void
+  showUIInFullscreen: boolean
+  toggleUIInFullscreen: () => void
 
   // Camera
   cameraTarget: string | null
@@ -278,6 +282,10 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   togglePOI: () => set((state) => ({ showPOI: !state.showPOI })),
   showFPS: false,
   toggleFPS: () => set((state) => ({ showFPS: !state.showFPS })),
+  isFullscreen: false,
+  setIsFullscreen: (fullscreen) => set({ isFullscreen: fullscreen }),
+  showUIInFullscreen: false,
+  toggleUIInFullscreen: () => set((state) => ({ showUIInFullscreen: !state.showUIInFullscreen })),
 
   // AR
   arMode: false,

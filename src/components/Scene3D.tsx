@@ -200,6 +200,7 @@ export default function Scene3D() {
   const toneMappingExposure = useAppStore(state => state.toneMappingExposure)
   const activeBottomPanel = useAppStore(state => state.activeBottomPanel)
   const setActiveBottomPanel = useAppStore(state => state.setActiveBottomPanel)
+  const setIsFullscreen = useAppStore(state => state.setIsFullscreen)
   
   // Log current view mode and camera position
   useEffect(() => {
@@ -245,6 +246,9 @@ export default function Scene3D() {
 
     // Handle fullscreen change to update canvas size
     const handleFullscreenChange = () => {
+      const isFullscreen = !!document.fullscreenElement
+      setIsFullscreen(isFullscreen)
+      
       const canvas = document.querySelector('canvas')
       if (canvas) {
         // Force resize after fullscreen change
