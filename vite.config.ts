@@ -5,13 +5,18 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    host: true
+    host: true,
+    fs: {
+      // Exclude model-viewer folder from serving
+      deny: ['**/model-viewer-4.1.0/**']
+    }
   },
   build: {
     outDir: 'dist',
     sourcemap: true
   },
   optimizeDeps: {
-    include: ['three']
+    include: ['three'],
+    exclude: ['model-viewer-4.1.0']
   }
 })

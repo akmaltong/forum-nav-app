@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useAppStore } from '../store/appStore'
-import { calculateRoute } from '../utils/navigation'
-import { createNavigationNotification } from '../utils/notifications'
+import ReminderModal from './ReminderModal'
 
 export default function ZonesPanel() {
   const zones = useAppStore(state => state.zones)
@@ -9,7 +8,13 @@ export default function ZonesPanel() {
   const events = useAppStore(state => state.events)
   const setViewMode = useAppStore(state => state.setViewMode)
   const setRoute = useAppStore(state => state.setRoute)
+  const favoriteEvents = useAppStore(state => state.favoriteEvents)
+  const toggleFavoriteEvent = useAppStore(state => state.toggleFavoriteEvent)
+  const eventReminders = useAppStore(state => state.eventReminders)
+  const setEventReminder = useAppStore(state => state.setEventReminder)
+  const removeEventReminder = useAppStore(state => state.removeEventReminder)
   const [expandedZoneId, setExpandedZoneId] = useState<string | null>(null)
+  const [reminderModalEvent, setReminderModalEvent] = useState<typeof events[0] | null>(null)
 
   const handleTeleport = (zone: typeof zones[0]) => {
     setViewMode('angle')
@@ -18,19 +23,7 @@ export default function ZonesPanel() {
     // Don't close panel — keep list open
   }
 
-  const handleNavigate = (zone: typeof zones[0]) => {
-    const userLocation = useAppStore.getState().userLocation
 
-    if (userLocation) {
-      const route = calculateRoute(userLocation.position, zone.position)
-      setRoute(route)
-
-      const { addNotification } = useAppStore.getState()
-      addNotification(createNavigationNotification(zone.name, route.distance, route.estimatedTime))
-
-      setActivePanel(null)
-    }
-  }
 
   const getZoneEvents = (zoneId: string) => {
     return events.filter(e => e.zoneId === zoneId)
@@ -48,11 +41,22 @@ export default function ZonesPanel() {
   }
 
   return (
-    <div className="max-h-[calc(100vh-60px)] bg-black/40 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-2xl m-2 border border-white/10 shadow-2xl">
+    <>
+      <div
+        className="h-full text-white overflow-hidden flex flex-col m-2 shadow-2xl"
+        style={{
+          backgroundColor: 'rgba(40, 40, 40, 0.4)',
+          backdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+          WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+          borderRadius: '25px',
+          border: '1px solid rgba(255,255,255,0.15)',
+          boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4)',
+        }}
+      >
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(212, 175, 55, 0.8)' }}>
             <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
             <line x1="8" y1="2" x2="8" y2="18" />
             <line x1="16" y1="6" x2="16" y2="22" />
@@ -113,47 +117,63 @@ export default function ZonesPanel() {
 
               {isExpanded && (
                 <div className="mt-2 pt-2 border-t border-white/[0.06] space-y-2">
-                  {/* Action buttons */}
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleNavigate(zone)
-                      }}
-                      className="flex-1 bg-white/10 hover:bg-white/15 text-white py-1.5 rounded-lg font-medium transition-all text-[10px] border border-white/[0.06] flex items-center justify-center gap-1"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polygon points="3 11 22 2 13 21 11 13 3 11" />
-                      </svg>
-                      Маршрут
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleTeleport(zone)
-                      }}
-                      className="flex-1 bg-white/10 hover:bg-white/15 text-white py-1.5 rounded-lg font-medium transition-all text-[10px] border border-white/[0.06] flex items-center justify-center gap-1"
-                    >
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                      Обзор
-                    </button>
-                  </div>
-
                   {/* Zone events (inline like EventsPanel) */}
                   {zoneEvents.length > 0 && (
                     <div className="space-y-1">
                       <div className="text-[9px] text-gray-500 font-medium uppercase tracking-wider">Мероприятия</div>
-                      {zoneEvents.slice(0, 3).map(event => (
-                        <div key={event.id} className="bg-white/5 rounded-lg px-2 py-1.5 border border-white/[0.04]">
-                          <div className="font-medium text-[10px] text-gray-200 truncate">{event.title}</div>
-                          <div className="text-[9px] text-gray-500">
-                            {new Date(event.startTime).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+                      {zoneEvents.slice(0, 3).map(event => {
+                        const isFavorite = favoriteEvents.includes(event.id)
+                        const hasReminder = event.id in eventReminders
+                        return (
+                          <div key={event.id} className="bg-white/5 rounded-lg px-2 py-1.5 border border-white/[0.04]">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-[10px] text-gray-200 truncate">{event.title}</div>
+                                <div className="text-[9px] text-gray-500">
+                                  {new Date(event.startTime).toLocaleTimeString('ru', { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {/* Favorite button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    toggleFavoriteEvent(event.id)
+                                  }}
+                                  className={`p-1 rounded transition-colors ${
+                                    isFavorite 
+                                      ? 'text-amber-400 hover:text-amber-300' 
+                                      : 'text-gray-600 hover:text-gray-400'
+                                  }`}
+                                  title={isFavorite ? 'Убрать из избранного' : 'Добавить в избранное'}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                  </svg>
+                                </button>
+                                {/* Reminder button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setReminderModalEvent(event)
+                                  }}
+                                  className={`p-1 rounded transition-colors ${
+                                    hasReminder
+                                      ? 'text-blue-400 hover:text-blue-300'
+                                      : 'text-gray-600 hover:text-blue-400'
+                                  }`}
+                                  title={hasReminder ? 'Изменить напоминание' : 'Настроить напоминание'}
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill={hasReminder ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                       {zoneEvents.length > 3 && (
                         <div className="text-[9px] text-gray-600 text-center">
                           + ещё {zoneEvents.length - 3}
@@ -168,5 +188,18 @@ export default function ZonesPanel() {
         })}
       </div>
     </div>
+
+    {/* Reminder Modal */}
+    {reminderModalEvent && (
+      <ReminderModal
+        eventTitle={reminderModalEvent.title}
+        currentReminder={eventReminders[reminderModalEvent.id]}
+        onClose={() => setReminderModalEvent(null)}
+        onSetReminder={(minutes) => {
+          setEventReminder(reminderModalEvent.id, minutes)
+        }}
+      />
+    )}
+    </>
   )
 }

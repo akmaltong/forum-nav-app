@@ -1,26 +1,74 @@
-import { useAppStore } from '../store/appStore'
+import { useState, useEffect } from 'react'
 import MiniMap from './MiniMap'
 import BottomNav from './BottomNav'
+import NotificationBar from './NotificationBar'
+import { useAppStore } from '../store/appStore'
+import AdjustmentsPanel from './AdjustmentsPanel'
 import EventsPanel from './EventsPanel'
 import ZonesPanel from './ZonesPanel'
 import FriendsPanel from './FriendsPanel'
 import MenuPanel from './MenuPanel'
-import NotificationBar from './NotificationBar'
-import ARView from './ARView'
 import ZoneEditor from './ZoneEditor'
 import ZoneDetailOverlay from './ZoneDetailOverlay'
-import AdjustmentsPanel from './AdjustmentsPanel'
+import ARView from './ARView'
+import SettingsPanel from './SettingsPanel'
 
 export default function UIOverlay() {
   const activePanel = useAppStore(state => state.activePanel)
   const arMode = useAppStore(state => state.arMode)
   const showMiniMap = useAppStore(state => state.showMiniMap)
-  const showAdjustments = useAppStore(state => state.showAdjustments)
-  const setShowAdjustments = useAppStore(state => state.setShowAdjustments)
+  const activeBottomPanel = useAppStore(state => state.activeBottomPanel)
+  const viewMode = useAppStore(state => state.viewMode)
+  const selectedZone = useAppStore(state => state.selectedZone)
+  
+  // Track previous panel for smooth closing animation
+  const [lastActivePanel, setLastActivePanel] = useState<string | null>(null)
+  const [lastBottomPanel, setLastBottomPanel] = useState<string | null>(null)
+
+  // Debug logging
+  console.log('UIOverlay render:', { activeBottomPanel, lastBottomPanel })
+
+  useEffect(() => {
+    if (activePanel) {
+      setLastActivePanel(activePanel)
+    } else {
+      // Delay clearing to allow animation to complete
+      const timer = setTimeout(() => setLastActivePanel(null), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activePanel])
+
+  useEffect(() => {
+    if (activePanel) {
+      setLastActivePanel(activePanel)
+    } else {
+      // Delay clearing to allow animation to complete
+      const timer = setTimeout(() => setLastActivePanel(null), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activePanel])
+
+  useEffect(() => {
+    if (activeBottomPanel) {
+      setLastBottomPanel(activeBottomPanel)
+    } else {
+      // Delay clearing to allow animation to complete
+      const timer = setTimeout(() => setLastBottomPanel(null), 300)
+      return () => clearTimeout(timer)
+    }
+  }, [activeBottomPanel])
+
+  const panelToShow = activePanel || lastActivePanel
+  const bottomPanelToShow = activeBottomPanel || lastBottomPanel
 
   if (arMode) {
     return <ARView />
   }
+
+  const hasFloatingPanel = activeBottomPanel === 'lighting' || activeBottomPanel === 'settings'
+
+  // Minimap visibility: show only when no panels/overlays are open, not in first-person, and on desktop
+  const showMiniMapVisible = showMiniMap && !hasFloatingPanel && !activePanel && !selectedZone && viewMode !== 'first-person'
 
   return (
     <div className="absolute inset-0 pointer-events-none">
@@ -28,36 +76,18 @@ export default function UIOverlay() {
       <NotificationBar />
 
       {/* Header Info */}
-      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] pt-safe pl-safe">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-white font-bold text-xs sm:text-sm tracking-tight opacity-90">МФФ</span>
+          <span className="text-white font-bold text-xs sm:text-sm tracking-tight opacity-90">MFF</span>
           <span className="text-gray-400 text-xs sm:text-sm">|</span>
-          <span className="text-gray-300 text-xs sm:text-sm font-medium">3D Навигация</span>
+          <span className="text-gray-300 text-xs sm:text-sm font-medium">3D Navigation</span>
         </div>
-        <div className="text-[9px] sm:text-[10px] text-gray-400 leading-tight hidden sm:block">
-          Московский Финансовый Форум<br />
-          Интерактивная навигация по площадке
-        </div>
+        <div className="text-[9px] text-white/30 font-mono tracking-wide">v1.2.0</div>
       </div>
 
-      {/* Settings Toggle Button (Top Right) */}
-      <div className="absolute top-3 sm:top-4 right-3 sm:right-4 flex items-center gap-2 pointer-events-auto">
-        <button
-          onClick={() => setShowAdjustments(!showAdjustments)}
-          className={`p-2 rounded-xl border transition-all backdrop-blur-xl ${showAdjustments
-            ? 'bg-white/15 border-white/20 text-white'
-            : 'bg-black/30 border-white/[0.08] text-gray-400 hover:text-white hover:bg-black/40'
-            }`}
-          title="Toggle Settings"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Adjustments Panel */}
-      {showAdjustments && <AdjustmentsPanel />}
+      {/* Floating bottom panels */}
+      {activeBottomPanel === 'lighting' && <AdjustmentsPanel />}
+      {activeBottomPanel === 'settings' && <SettingsPanel />}
 
       {/* Zone Editor */}
       <ZoneEditor />
@@ -65,36 +95,47 @@ export default function UIOverlay() {
       {/* Zone Details */}
       <ZoneDetailOverlay />
 
-      {/* Mini map (Hidden if settings are open to avoid overlap) */}
-      {showMiniMap && !showAdjustments && (
-        <div className="absolute top-4 right-4 pointer-events-auto mt-16 scale-75 origin-top-right opacity-50 hidden sm:block">
+      {/* Mini map - visible when no panels/overlays are open, not in first-person mode */}
+      {showMiniMapVisible && (
+        <div
+          className="absolute top-4 right-4 pointer-events-auto mt-8 scale-50 sm:scale-75 origin-top-right transition-opacity duration-500"
+          style={{ opacity: 0.6 }}
+        >
           <MiniMap />
         </div>
       )}
 
-      {/* Side panels — full width on mobile, fixed width on desktop */}
-      <div className={`absolute top-0 left-0 max-h-full w-full sm:w-80 transition-transform duration-300 pointer-events-auto z-40 ${activePanel ? 'translate-x-0' : '-translate-x-full'
-        }`}>
-        {activePanel === 'events' && <EventsPanel />}
-        {activePanel === 'zones' && <ZonesPanel />}
-        {activePanel === 'friends' && <FriendsPanel />}
-        {activePanel === 'menu' && <MenuPanel />}
+      {/* Side panels with smooth open/close animation */}
+      <div 
+        className={`absolute left-0 w-[85%] sm:w-80 transition-transform duration-300 ease-in-out pointer-events-auto z-40 ${
+          activePanel ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ 
+          top: '80px',
+          bottom: '120px',
+          maxHeight: 'calc(100vh - 200px)'
+        }}
+      >
+        {panelToShow === 'events' && <EventsPanel />}
+        {panelToShow === 'zones' && <ZonesPanel />}
+        {panelToShow === 'friends' && <FriendsPanel />}
+        {panelToShow === 'menu' && <MenuPanel />}
       </div>
 
-      {/* Backdrop overlay for mobile when panel is open */}
+      {/* Backdrop overlay - close panels on tap */}
       {activePanel && (
         <div
-          className="absolute inset-0 bg-black/30 sm:hidden pointer-events-auto z-30"
-          onClick={() => useAppStore.getState().setActivePanel(null)}
+          className="absolute inset-0 pointer-events-auto z-30"
+          onClick={() => {
+            useAppStore.getState().setActivePanel(null)
+          }}
         />
       )}
 
-      {/* Bottom navigation */}
-      {!showAdjustments && (
-        <div className="absolute bottom-0 left-0 right-0 pointer-events-auto z-20">
-          <BottomNav />
-        </div>
-      )}
+      {/* Bottom navigation - always visible */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-auto z-50">
+        <BottomNav />
+      </div>
     </div>
   )
 }

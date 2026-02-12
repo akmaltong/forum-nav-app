@@ -1,58 +1,58 @@
 import { useAppStore } from '../store/appStore'
 
-function NavIcon({ id, isActive }: { id: string; isActive: boolean }) {
-  const sw = isActive ? '2' : '1.6'
-
+function NavIcon({ id }: { id: string }) {
   switch (id) {
-    case 'events':
+    case 'home':
       return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-          <line x1="16" y1="2" x2="16" y2="6" />
-          <line x1="8" y1="2" x2="8" y2="6" />
-          <line x1="3" y1="10" x2="21" y2="10" />
-          {isActive && <circle cx="12" cy="16" r="1.5" fill="currentColor" />}
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
         </svg>
       )
-    case 'zones':
+    case 'surroundings':
       return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-          <line x1="8" y1="2" x2="8" y2="18" />
-          <line x1="16" y1="6" x2="16" y2="22" />
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
         </svg>
       )
-    case 'angle':
+    case 'search':
       return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      )
+    case 'lighting':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="5" />
+          <line x1="12" y1="1" x2="12" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="23" />
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+          <line x1="1" y1="12" x2="3" y2="12" />
+          <line x1="21" y1="12" x2="23" y2="12" />
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+      )
+    case 'settings':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+          <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+          <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+          <line x1="1" y1="14" x2="7" y2="14" />
+          <line x1="9" y1="8" x2="15" y2="8" />
+          <line x1="17" y1="16" x2="23" y2="16" />
+        </svg>
+      )
+    case 'poi':
+      return (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-          <circle cx="12" cy="12" r="3" fill={isActive ? 'currentColor' : 'none'} />
-        </svg>
-      )
-    case 'first-person':
-      return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="5" r="3" />
-          <line x1="12" y1="8" x2="12" y2="16" />
-          <line x1="8" y1="12" x2="16" y2="12" />
-          <line x1="12" y1="16" x2="8" y2="22" />
-          <line x1="12" y1="16" x2="16" y2="22" />
-        </svg>
-      )
-    case 'friends':
-      return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-        </svg>
-      )
-    case 'menu':
-      return (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       )
     default:
@@ -60,73 +60,137 @@ function NavIcon({ id, isActive }: { id: string; isActive: boolean }) {
   }
 }
 
+const buttons = [
+  { id: 'home', label: 'ГЛАВНАЯ' },
+  { id: 'surroundings', label: 'ЗОНЫ' },
+  { id: 'search', label: 'РАСПИСАНИЕ' },
+  { id: 'poi', label: 'POI' },
+  { id: 'lighting', label: 'ОСВЕЩЕНИЕ' },
+  { id: 'settings', label: 'НАСТРОЙКИ' },
+]
+
 export default function BottomNav() {
   const activePanel = useAppStore(state => state.activePanel)
   const setActivePanel = useAppStore(state => state.setActivePanel)
-  const arMode = useAppStore(state => state.arMode)
-  const setArMode = useAppStore(state => state.setArMode)
-  const viewMode = useAppStore(state => state.viewMode)
+  const activeBottomPanel = useAppStore(state => state.activeBottomPanel)
+  const setActiveBottomPanel = useAppStore(state => state.setActiveBottomPanel)
   const setViewMode = useAppStore(state => state.setViewMode)
-  const userLocation = useAppStore(state => state.userLocation)
-
-  const buttons = [
-    { id: 'events', label: 'События' },
-    { id: 'zones', label: 'Зоны' },
-    { id: 'angle', label: 'Обзор' },
-    { id: 'first-person', label: 'Пешком' },
-    { id: 'friends', label: 'Друзья' },
-    { id: 'menu', label: 'Ещё' },
-  ]
+  const showPOI = useAppStore(state => state.showPOI)
+  const togglePOI = useAppStore(state => state.togglePOI)
 
   const handleClick = (id: string) => {
-    if (id === 'ar') {
-      setArMode(!arMode)
-    } else if (id === 'angle' || id === 'first-person') {
-      setViewMode(id as any)
-      if (id === 'first-person' && userLocation) {
-        useAppStore.getState().setCameraTarget(null)
-      }
-    } else {
-      setActivePanel(activePanel === id ? null : id as any)
+    if (id === 'home') {
+      // Reset to overview perspective view, close all panels, animate camera
+      console.log('HOME clicked, current viewMode:', useAppStore.getState().viewMode)
+      setActivePanel(null)
+      setActiveBottomPanel(null)
+      setViewMode('angle')
+      useAppStore.getState().setSelectedZone(null)
+      useAppStore.getState().setResetCameraToOverview(true)
+      console.log('After HOME: viewMode set to angle, resetCameraToOverview set to true')
+    } else if (id === 'surroundings') {
+      // Toggle zones panel
+      setActivePanel(activePanel === 'zones' ? null : 'zones' as any)
+      setActiveBottomPanel(null)
+    } else if (id === 'search') {
+      // Toggle events panel (search functionality)
+      setActivePanel(activePanel === 'events' ? null : 'events' as any)
+      setActiveBottomPanel(null)
+    } else if (id === 'poi') {
+      // Toggle POI visibility
+      togglePOI()
+    } else if (id === 'lighting') {
+      // Toggle lighting panel
+      setActivePanel(null)
+      setActiveBottomPanel(activeBottomPanel === 'lighting' ? null : 'lighting')
+    } else if (id === 'settings') {
+      // Toggle settings panel
+      setActivePanel(null)
+      setActiveBottomPanel(activeBottomPanel === 'settings' ? null : 'settings')
     }
   }
 
-  return (
-    <div className="flex justify-center pb-safe px-2 sm:px-0">
-      <div className="mb-2 sm:mb-3 bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl w-full sm:w-auto sm:min-w-[420px] sm:max-w-[780px] mx-auto">
-        <div className="flex justify-around sm:justify-center items-center gap-0 px-1 sm:px-2 py-2">
-          {buttons.map(button => {
-            const isActive = button.id === 'ar'
-              ? arMode
-              : (button.id === 'angle' || button.id === 'first-person')
-                ? viewMode === button.id
-                : activePanel === button.id
+  const isActive = (id: string) => {
+    if (id === 'surroundings') return activePanel === 'zones'
+    if (id === 'search') return activePanel === 'events'
+    if (id === 'poi') return showPOI
+    if (id === 'lighting') return activeBottomPanel === 'lighting'
+    if (id === 'settings') return activeBottomPanel === 'settings'
+    return false
+  }
 
-            return (
-              <button
-                key={button.id}
-                onClick={() => handleClick(button.id)}
-                className={`relative flex flex-col items-center gap-0.5 px-2 sm:px-4 py-1.5 rounded-xl transition-all duration-200 ${isActive
-                  ? 'text-white'
-                  : 'text-gray-500 hover:text-gray-300'
-                  }`}
+  return (
+    <div className="flex justify-center safe-area-inset-bottom px-2 sm:px-0" style={{ paddingBottom: '20px' }}>
+      <div className="mb-4 sm:mb-5 flex items-center gap-1.5">
+        {buttons.map(button => {
+          const active = isActive(button.id)
+          return (
+            <button
+              key={button.id}
+              onClick={() => handleClick(button.id)}
+              className="group relative flex items-center justify-center overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] rounded-full border"
+              style={{
+                width: active ? 'auto' : '42px',
+                height: '42px',
+                minWidth: '42px',
+                minHeight: '42px',
+                backgroundColor: active ? 'rgba(40,40,40,0.7)' : 'rgba(40,40,40,0.6)',
+                borderColor: 'rgba(255,255,255,0.15)',
+                boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.4)',
+                padding: active ? '0 16px' : '0',
+                gap: active ? '4px' : '0',
+              }}
+              onMouseEnter={(e) => {
+                if (!active) {
+                  const el = e.currentTarget
+                  el.style.width = 'auto'
+                  el.style.padding = '0 16px'
+                  el.style.gap = '6px'
+                  el.style.backgroundColor = 'rgba(40,40,40,0.7)'
+                  const label = el.querySelector('.menu-text') as HTMLElement
+                  if (label) {
+                    label.style.maxWidth = '200px'
+                    label.style.opacity = '1'
+                    label.style.marginLeft = '6px'
+                  }
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!active) {
+                  const el = e.currentTarget
+                  el.style.width = '42px'
+                  el.style.padding = '0'
+                  el.style.gap = '0'
+                  el.style.backgroundColor = 'rgba(40,40,40,0.6)'
+                  const label = el.querySelector('.menu-text') as HTMLElement
+                  if (label) {
+                    label.style.maxWidth = '0'
+                    label.style.opacity = '0'
+                    label.style.marginLeft = '0'
+                  }
+                }
+              }}
+            >
+              <div className="shrink-0 text-white flex items-center justify-center" style={{ width: '20px', height: '20px' }}>
+                <NavIcon id={button.id} />
+              </div>
+              <span
+                className="menu-text text-white whitespace-nowrap overflow-hidden transition-all duration-300"
+                style={{
+                  fontSize: '8px',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  maxWidth: active ? '200px' : '0',
+                  opacity: active ? 1 : 0,
+                  marginLeft: active ? '6px' : '0',
+                }}
               >
-                {isActive && (
-                  <div className="absolute inset-0 bg-white/10 rounded-xl border border-white/10" />
-                )}
-                <div className="relative z-10">
-                  <NavIcon id={button.id} isActive={isActive} />
-                </div>
-                <span className={`relative z-10 text-[10px] font-medium tracking-wide ${isActive ? 'text-white' : ''}`}>
-                  {button.label}
-                </span>
-                {isActive && (
-                  <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.6)]" />
-                )}
-              </button>
-            )
-          })}
-        </div>
+                {button.label}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

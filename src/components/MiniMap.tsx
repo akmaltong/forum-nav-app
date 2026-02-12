@@ -18,7 +18,17 @@ export default function MiniMap() {
   }
   
   return (
-    <div className="bg-gray-900/90 backdrop-blur-sm rounded-2xl p-3 shadow-2xl border border-gray-700">
+    <div
+      className="p-3 shadow-2xl"
+      style={{
+        backgroundColor: 'rgba(104, 104, 104, 0.15)',
+        backdropFilter: 'blur(8px) saturate(150%) brightness(1.2)',
+        WebkitBackdropFilter: 'blur(8px) saturate(150%) brightness(1.2)',
+        borderRadius: '25px',
+        border: '1px solid rgba(255,255,255,0.1)',
+        boxShadow: 'inset 0 0 6px 2px rgba(255,255,255,0.04)',
+      }}
+    >
       <div className="text-white text-xs font-bold mb-2 flex items-center justify-between">
         <span>Мини-карта</span>
         <span className="text-gray-400">📍</span>
@@ -27,7 +37,8 @@ export default function MiniMap() {
       <svg 
         width="200" 
         height="200" 
-        className="bg-gray-800 rounded-lg"
+        className="rounded-lg"
+        style={{ background: 'rgba(0,0,0,0.2)' }}
         viewBox="0 0 200 200"
       >
         {/* Grid */}

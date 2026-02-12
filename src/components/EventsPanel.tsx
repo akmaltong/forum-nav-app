@@ -3,7 +3,6 @@ import { useAppStore } from '../store/appStore'
 import { events } from '../data/mockData'
 import { format, differenceInMinutes } from 'date-fns'
 import { calculateRoute } from '../utils/navigation'
-import { createNavigationNotification } from '../utils/notifications'
 
 type FilterType = 'all' | 'favorites' | 'now'
 
@@ -49,15 +48,8 @@ export default function EventsPanel() {
     const userLocation = useAppStore.getState().userLocation
 
     if (zone && userLocation) {
-      useAppStore.getState().setViewMode('first-person')
-      const { setCameraTarget } = useAppStore.getState()
-      setCameraTarget(zone.id)
-
       const route = calculateRoute(userLocation.position, zone.position)
       setRoute(route)
-
-      const { addNotification } = useAppStore.getState()
-      addNotification(createNavigationNotification(zone.name, route.distance, route.estimatedTime))
 
       setActivePanel(null)
     }
@@ -70,11 +62,21 @@ export default function EventsPanel() {
   ]
 
   return (
-    <div className="max-h-[calc(100vh-60px)] bg-black/40 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-2xl m-2 border border-white/10 shadow-2xl">
+    <div
+      className="h-full text-white overflow-hidden flex flex-col m-2 shadow-2xl"
+      style={{
+        backgroundColor: 'rgba(40, 40, 40, 0.4)',
+        backdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        borderRadius: '25px',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4)',
+      }}
+    >
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'rgba(212, 175, 55, 0.8)' }}>
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
             <line x1="8" y1="2" x2="8" y2="6" />
@@ -123,7 +125,7 @@ export default function EventsPanel() {
                   ? 'border-l-[3px] border-green-500/60'
                   : event.status === 'completed'
                     ? 'border-l-[3px] border-gray-600/40 opacity-50'
-                    : 'border-l-[3px] border-blue-500/40'
+                    : 'border-l-[3px] border-[rgba(212,175,55,0.4)]'
                   } ${isSelected ? 'ring-1 ring-white/20' : ''}`}
                 onClick={() => setSelectedEvent(event.id === selectedEvent?.id ? null : event)}
               >

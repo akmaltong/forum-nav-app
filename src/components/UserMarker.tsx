@@ -1,12 +1,16 @@
 import { useAppStore } from '../store/appStore'
 import { Html } from '@react-three/drei'
+import { useCameraType } from '../hooks/useCameraType'
 
 export default function UserMarker() {
   const userLocation = useAppStore(state => state.userLocation)
   const viewMode = useAppStore(state => state.viewMode)
+  const showPOI = useAppStore(state => state.showPOI)
+  const { isOrthographic } = useCameraType()
 
   // Hide in first-person mode — no need to see yourself
-  if (!userLocation || viewMode === 'first-person') return null
+  // Also hide when POI is disabled
+  if (!userLocation || viewMode === 'first-person' || !showPOI) return null
 
   return (
     <group position={userLocation.position}>
@@ -33,12 +37,10 @@ export default function UserMarker() {
         position={[0, 4, 0]}
         style={{ pointerEvents: 'none' }}
         occlude={false}
-        transform
-        sprite
       >
         <div
           className="bg-blue-600 text-white px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-lg"
-          style={{ fontSize: '10px' }}
+          style={{ fontSize: isOrthographic ? '7px' : '10px' }}
         >
           Вы здесь
         </div>

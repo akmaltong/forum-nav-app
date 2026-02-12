@@ -2,14 +2,22 @@ import { useEffect } from 'react'
 import { Html } from '@react-three/drei'
 import { useAppStore } from '../store/appStore'
 import { friends } from '../data/mockData'
+import { useCameraType } from '../hooks/useCameraType'
 
 export default function FriendMarkers() {
   const selectedFriend = useAppStore(state => state.selectedFriend)
   const setSelectedFriend = useAppStore(state => state.setSelectedFriend)
+  const showPOI = useAppStore(state => state.showPOI)
+  const { isOrthographic } = useCameraType()
   
   useEffect(() => {
     useAppStore.setState({ friends })
   }, [])
+  
+  // Don't render if POI is hidden
+  if (!showPOI) {
+    return null
+  }
   
   return (
     <>
@@ -41,8 +49,6 @@ export default function FriendMarkers() {
               position={[0, 3.5, 0]}
               style={{ pointerEvents: 'none' }}
               occlude={false}
-              transform
-              sprite
             >
               <div 
                 className={`px-2 py-0.5 rounded-full font-bold whitespace-nowrap shadow-lg cursor-pointer transition-all pointer-events-auto ${
@@ -50,7 +56,7 @@ export default function FriendMarkers() {
                     ? 'bg-green-500 text-white' 
                     : 'bg-gray-800 bg-opacity-80 text-green-300 hover:bg-opacity-100'
                 }`}
-                style={{ fontSize: '10px' }}
+                style={{ fontSize: isOrthographic ? '7px' : '10px' }}
                 onClick={(e) => {
                   e.stopPropagation()
                   setSelectedFriend(isSelected ? null : friend)

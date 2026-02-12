@@ -26,7 +26,17 @@ export default function FriendsPanel() {
   const onlineCount = friends.filter(f => f.isOnline).length
 
   return (
-    <div className="max-h-[calc(100vh-60px)] bg-black/40 backdrop-blur-xl text-white overflow-hidden flex flex-col rounded-2xl m-2 border border-white/10 shadow-2xl">
+    <div
+      className="max-h-[calc(100vh-60px)] text-white overflow-hidden flex flex-col m-2 shadow-2xl"
+      style={{
+        backgroundColor: 'rgba(40, 40, 40, 0.4)',
+        backdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        borderRadius: '25px',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4)',
+      }}
+    >
       {/* Header */}
       <div className="px-4 py-3 flex items-center justify-between shrink-0 border-b border-white/[0.06]">
         <div className="flex items-center gap-2">

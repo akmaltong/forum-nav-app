@@ -40,7 +40,6 @@ export default function ZoneDetailOverlay() {
       setRoute(route)
       addNotification(createNavigationNotification(selectedZone.name, route.distance, route.estimatedTime))
 
-      setViewMode('first-person')
       setCameraTarget(null)
 
       setSelectedZone(null)
@@ -49,7 +48,17 @@ export default function ZoneDetailOverlay() {
   }
 
   return (
-    <div className="absolute top-2 left-2 right-2 sm:right-auto sm:top-4 sm:left-4 sm:w-[95%] max-w-sm bg-black/40 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl pointer-events-auto overflow-hidden max-h-[85vh] flex flex-col z-50">
+    <div
+      className="absolute top-2 left-2 right-2 sm:right-auto sm:top-4 sm:left-4 sm:w-[95%] max-w-sm pointer-events-auto overflow-hidden max-h-[85vh] flex flex-col z-50"
+      style={{
+        backgroundColor: 'rgba(40, 40, 40, 0.4)',
+        backdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%) brightness(0.7)',
+        borderRadius: '25px',
+        border: '1px solid rgba(255,255,255,0.15)',
+        boxShadow: 'inset 0 1px 0 0 rgba(255,255,255,0.1), inset 0 -1px 0 0 rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.4)',
+      }}
+    >
       {/* Header */}
       <div className="px-4 pt-4 pb-3 flex items-start justify-between shrink-0 border-b border-white/[0.06]">
         <div className="flex items-center gap-3">

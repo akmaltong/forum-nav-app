@@ -3,12 +3,15 @@ import { Html } from '@react-three/drei'
 import { useAppStore } from '../store/appStore'
 import { zones } from '../data/mockData'
 import ZoneMarkerHighlight from './ZoneMarkerHighlight'
+import { useCameraType } from '../hooks/useCameraType'
 
 export default function ZoneMarkers() {
   const zonesFromStore = useAppStore(state => state.zones)
   const selectedZone = useAppStore(state => state.selectedZone)
   const setSelectedZone = useAppStore(state => state.setSelectedZone)
   const setCameraTarget = useAppStore(state => state.setCameraTarget)
+  const showPOI = useAppStore(state => state.showPOI)
+  const { isOrthographic } = useCameraType()
 
   // Load zones into store initially
   useEffect(() => {
@@ -19,6 +22,11 @@ export default function ZoneMarkers() {
 
   // Use zones from store (will update when edited)
   const currentZones = zonesFromStore.length > 0 ? zonesFromStore : zones
+
+  // Don't render if POI is hidden
+  if (!showPOI) {
+    return null
+  }
 
   return (
     <>
@@ -46,13 +54,11 @@ export default function ZoneMarkers() {
               <ZoneMarkerHighlight position={[0, 0, 0]} color={zone.color} />
             )}
 
-            {/* Zone label — CSS-based (not transform) for crisp text */}
+            {/* Zone label — CSS-based, always screen-space for consistent size */}
             <Html
               position={[0, 8, 0]}
               center
-              distanceFactor={60}
               occlude={false}
-              sprite
               style={{ pointerEvents: 'auto' }}
             >
               <div
@@ -62,7 +68,7 @@ export default function ZoneMarkers() {
                   }`}
                 style={{
                   borderLeft: `3px solid ${zone.color}`,
-                  fontSize: '13px',
+                  fontSize: isOrthographic ? '8px' : '13px',
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
                   border: `1px solid rgba(255,255,255,0.08)`,

@@ -1,52 +1,83 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { useAppStore } from '../store/appStore'
 
 function LoadedModel() {
   const gltf = useGLTF('/SM_MFF.glb')
-
+  const { scene } = gltf
+  
+  // Log loading status
+  useEffect(() => {
+    console.log('GLTF Loading Status:', { hasScene: !!scene })
+    if (scene) {
+      console.log('GLTF Model loaded successfully')
+      // Log scene info
+      console.log('Scene children count:', scene.children?.length)
+    }
+  }, [scene])
+  
+  // Get material settings from store
   const materialColor = useAppStore(state => state.materialColor)
   const materialRoughness = useAppStore(state => state.materialRoughness)
   const materialMetalness = useAppStore(state => state.materialMetalness)
-  const materialOpacity = useAppStore(state => state.materialOpacity)
+
+  // Create material with store settings - using MeshStandardMaterial for PBR
+  const material = useMemo(() => {
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(materialColor),
+      roughness: materialRoughness,
+      metalness: materialMetalness,
+      envMapIntensity: 1.2,
+      flatShading: false,
+      side: THREE.FrontSide,
+      // Enable better normal mapping for SSAO
+      normalMapType: THREE.TangentSpaceNormalMap,
+    })
+  }, [materialColor, materialRoughness, materialMetalness])
 
   // Apply materials to loaded model
   useEffect(() => {
     if (gltf?.scene) {
       gltf.scene.traverse((child: any) => {
         if (child.isMesh) {
-          // Update material with store values
-          child.material = new THREE.MeshPhysicalMaterial({
-            color: materialColor,
-            roughness: materialRoughness,
-            metalness: materialMetalness,
-            opacity: materialOpacity,
-            transparent: materialOpacity < 1,
-            envMapIntensity: 1.5,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.1,
-            side: THREE.DoubleSide
-          })
+          // Clone material for each mesh
+          const mat = material.clone()
+          child.material = mat
           child.castShadow = true
           child.receiveShadow = true
+          
+          // Optimize geometry
+          if (child.geometry) {
+            child.geometry.computeBoundingSphere()
+            child.geometry.computeVertexNormals()
+            
+            // Enable anisotropic filtering for textures
+            if (child.material.map) {
+              child.material.map.anisotropy = 16
+            }
+            if (child.material.normalMap) {
+              child.material.normalMap.anisotropy = 16
+            }
+          }
         }
       })
     }
-  }, [gltf, materialColor, materialRoughness, materialMetalness, materialOpacity])
+  }, [gltf, material])
 
   return (
-    <primitive
-      object={gltf.scene}
-      scale={1}
-      position={[0, 0, 0]}
-      rotation={[0, 0, 0]}
-    />
+    <>
+      {/* Original model */}
+      <primitive
+        object={scene}
+        scale={1}
+        position={[0, 0, 0]}
+        rotation={[0, 0, 0]}
+      />
+    </>
   )
 }
 
 export default function VenueModel() {
-  // Render loaded model (Suspense will handle loading)
   return <LoadedModel />
 }
-

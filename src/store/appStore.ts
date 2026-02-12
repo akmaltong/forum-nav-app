@@ -3,6 +3,8 @@ import { persist } from 'zustand/middleware'
 import type { Zone, Event, Friend, Route, UserLocation, ViewMode, UIPanel, Notification } from '../types'
 
 export type GraphicsQuality = 'high' | 'performance'
+export type ToneMapping = 'ACES' | 'Linear' | 'Reinhard'
+export type LightingMode = 'hdri'
 
 interface AppState {
   // User state
@@ -21,6 +23,9 @@ interface AppState {
   setSelectedEvent: (event: Event | null) => void
   favoriteEvents: string[]
   toggleFavoriteEvent: (eventId: string) => void
+  eventReminders: Record<string, number> // eventId -> minutes before event
+  setEventReminder: (eventId: string, minutesBefore: number) => void
+  removeEventReminder: (eventId: string) => void
 
   // Friends
   friends: Friend[]
@@ -40,6 +45,8 @@ interface AppState {
   setActivePanel: (panel: UIPanel) => void
   showMiniMap: boolean
   toggleMiniMap: () => void
+  showPOI: boolean
+  togglePOI: () => void
 
   // Camera
   cameraTarget: string | null
@@ -48,6 +55,9 @@ interface AppState {
   setCameraPosition: (position: [number, number, number] | null) => void
   cameraTargetPosition: [number, number, number] | null
   setCameraTargetPosition: (position: [number, number, number] | null) => void
+  // Overview camera reset trigger
+  resetCameraToOverview: boolean
+  setResetCameraToOverview: (reset: boolean) => void
 
   // Edit mode
   editMode: boolean
@@ -61,6 +71,10 @@ interface AppState {
   showAdjustments: boolean
   setShowAdjustments: (show: boolean) => void
 
+  // Active bottom panel (which floating panel is open)
+  activeBottomPanel: string | null
+  setActiveBottomPanel: (panel: string | null) => void
+
   // AR
   arMode: boolean
   setArMode: (enabled: boolean) => void
@@ -70,79 +84,120 @@ interface AppState {
   addNotification: (notification: Notification) => void
   removeNotification: (id: string) => void
 
-  // HDRI Settings
-  hdriIntensity: number
-  setHdriIntensity: (intensity: number) => void
-  hdriMix: number
-  setHdriMix: (mix: number) => void
-  hdriProcedural: number
-  setHdriProcedural: (procedural: number) => void
-  hdriHue: number
-  setHdriHue: (hue: number) => void
-  hdriSaturation: number
-  setHdriSaturation: (saturation: number) => void
-  hdriBlur: number
-  setHdriBlur: (blur: number) => void
-  hdriRotation1: number
-  setHdriRotation1: (rotation: number) => void
-  hdriRotation2: number
-  setHdriRotation2: (rotation: number) => void
-  showHdriBackground: boolean
-  setShowHdriBackground: (show: boolean) => void
-  hdriFile: string
-  setHdriFile: (file: string) => void
-
-  // Background mode: 'sky' for procedural sky, 'hdri' for HDRI environment map
-  backgroundMode: 'sky' | 'hdri'
-  setBackgroundMode: (mode: 'sky' | 'hdri') => void
-
   // Sun / Time of Day
   timeOfDay: number // 0-24 hours
   setTimeOfDay: (time: number) => void
   sunOrientation: number // 0-360 degrees
   setSunOrientation: (orientation: number) => void
-  showLightingPanel: boolean
-  setShowLightingPanel: (show: boolean) => void
 
-  // Graphics Settings
+  // Graphics Quality
   graphicsQuality: GraphicsQuality
   setGraphicsQuality: (quality: GraphicsQuality) => void
 
-  // Material Settings
-  materialColor: string
-  setMaterialColor: (color: string) => void
-  materialRoughness: number
-  setMaterialRoughness: (roughness: number) => void
-  materialMetalness: number
-  setMaterialMetalness: (metalness: number) => void
-  materialOpacity: number
-  setMaterialOpacity: (opacity: number) => void
+  // Lighting Mode
+  lightingMode: LightingMode
+  setLightingMode: (mode: LightingMode) => void
 
-  // Post-processing / Color Correction
-  toneMapping: string
-  setToneMapping: (mapping: string) => void
+  // HDRI Environment Controls
+  hdriFile: string
+  setHdriFile: (file: string) => void
+  showHdriBackground: boolean
+  setShowHdriBackground: (show: boolean) => void
+  hdriIntensity: number
+  setHdriIntensity: (intensity: number) => void
+  hdriRotation: number
+  setHdriRotation: (rotation: number) => void
+  hdriBlur: number
+  setHdriBlur: (blur: number) => void
+  
+  // Per-environment settings
+  neutralIntensity: number
+  setNeutralIntensity: (intensity: number) => void
+  neutralBlur: number
+  setNeutralBlur: (blur: number) => void
+  
+  whiteIntensity: number
+  setWhiteIntensity: (intensity: number) => void
+  whiteBlur: number
+  setWhiteBlur: (blur: number) => void
+  
+  skyIntensity: number
+  setSkyIntensity: (intensity: number) => void
+  skyBlur: number
+  setSkyBlur: (blur: number) => void
+  
+  // Lighting Presets
+  currentLightingPreset: string
+  setCurrentLightingPreset: (preset: string) => void
+  applyLightingPreset: (presetName: string) => void
+  
+  // Shadow Animation
+  shadowAnimation: boolean
+  setShadowAnimation: (enabled: boolean) => void
+  shadowAnimationSpeed: number
+  setShadowAnimationSpeed: (speed: number) => void
+  shadowAnimationType: 'oscillate' | 'pulse' | 'breathe'
+  setShadowAnimationType: (type: 'oscillate' | 'pulse' | 'breathe') => void
+  
+  // Neutral Lighting Controls
+  neutralAmbientIntensity: number
+  setNeutralAmbientIntensity: (intensity: number) => void
+  neutralLightIntensity: number
+  setNeutralLightIntensity: (intensity: number) => void
+  neutralLightHeight: number
+  setNeutralLightHeight: (height: number) => void
+  neutralLightAngle: number
+  setNeutralLightAngle: (angle: number) => void
+  neutralHemisphereIntensity: number
+  setNeutralHemisphereIntensity: (intensity: number) => void
+  
+  // Studio Lighting Controls
+  studioKeyLightIntensity: number
+  setStudioKeyLightIntensity: (intensity: number) => void
+  studioKeyLightHeight: number
+  setStudioKeyLightHeight: (height: number) => void
+  studioKeyLightAngle: number
+  setStudioKeyLightAngle: (angle: number) => void
+  studioFillLightIntensity: number
+  setStudioFillLightIntensity: (intensity: number) => void
+  studioRimLightIntensity: number
+  setStudioRimLightIntensity: (intensity: number) => void
+  studioLightColor: string
+  setStudioLightColor: (color: string) => void
+  
+  // Global Effects
+  ssaaoEnabled: boolean
+  setSsaaoEnabled: (enabled: boolean) => void
+
+  // Shadow Controls
+  shadowIntensity: number
+  setShadowIntensity: (intensity: number) => void
+  
+  // Debug Mode
+  debugMode: boolean
+  setDebugMode: (enabled: boolean) => void
+
+  // Tone Mapping
+  toneMapping: ToneMapping
+  setToneMapping: (toneMapping: ToneMapping) => void
   toneMappingExposure: number
   setToneMappingExposure: (exposure: number) => void
+
+  // Post-processing effects
+  dofEnabled: boolean
+  setDofEnabled: (enabled: boolean) => void
   bloomIntensity: number
   setBloomIntensity: (intensity: number) => void
   bloomThreshold: number
   setBloomThreshold: (threshold: number) => void
   vignetteIntensity: number
   setVignetteIntensity: (intensity: number) => void
-  ssaoEnabled: boolean
-  setSsaoEnabled: (enabled: boolean) => void
-  ssaoIntensity: number
-  setSsaoIntensity: (intensity: number) => void
-  dofEnabled: boolean
-  setDofEnabled: (enabled: boolean) => void
-  dofFocusDistance: number
-  setDofFocusDistance: (distance: number) => void
-  dofFocalLength: number
-  setDofFocalLength: (length: number) => void
-  dofBokehScale: number
-  setDofBokehScale: (scale: number) => void
   chromaticAberration: number
-  setChromaticAberration: (amount: number) => void
+  setChromaticAberration: (value: number) => void
+  contactShadowsEnabled: boolean
+  setContactShadowsEnabled: (enabled: boolean) => void
+
+  // Color adjustments
   colorBrightness: number
   setColorBrightness: (brightness: number) => void
   colorContrast: number
@@ -156,51 +211,13 @@ interface AppState {
   nightLightsIntensity: number
   setNightLightsIntensity: (intensity: number) => void
 
-  // Contact shadows
-  contactShadowsEnabled: boolean
-  setContactShadowsEnabled: (enabled: boolean) => void
-
-  // Atmosphere (inspired by @takram/three-atmosphere)
-  atmosphereEnabled: boolean
-  setAtmosphereEnabled: (enabled: boolean) => void
-  atmosphereIntensity: number
-  setAtmosphereIntensity: (intensity: number) => void
-  atmosphereTurbidity: number
-  setAtmosphereTurbidity: (turbidity: number) => void
-  atmosphereMieCoeff: number
-  setAtmosphereMieCoeff: (coeff: number) => void
-  atmosphereRayleighScale: number
-  setAtmosphereRayleighScale: (scale: number) => void
-
-  // Clouds (inspired by @takram/three-clouds)
-  cloudsEnabled: boolean
-  setCloudsEnabled: (enabled: boolean) => void
-  cloudCoverage: number
-  setCloudCoverage: (coverage: number) => void
-  cloudDensity: number
-  setCloudDensity: (density: number) => void
-  cloudScale: number
-  setCloudScale: (scale: number) => void
-  cloudSpeed: number
-  setCloudSpeed: (speed: number) => void
-  cloudAltitude: number
-  setCloudAltitude: (altitude: number) => void
-  cloudOpacity: number
-  setCloudOpacity: (opacity: number) => void
-
-  // Fog
-  fogEnabled: boolean
-  setFogEnabled: (enabled: boolean) => void
-  fogDensity: number
-  setFogDensity: (density: number) => void
-  fogHeight: number
-  setFogHeight: (height: number) => void
-
-  // God Rays
-  godRaysEnabled: boolean
-  setGodRaysEnabled: (enabled: boolean) => void
-  godRaysIntensity: number
-  setGodRaysIntensity: (intensity: number) => void
+  // Material Settings
+  materialColor: string
+  setMaterialColor: (color: string) => void
+  materialRoughness: number
+  setMaterialRoughness: (roughness: number) => void
+  materialMetalness: number
+  setMaterialMetalness: (metalness: number) => void
 }
 
 export const useAppStore = create<AppState>()(persist((set) => ({
@@ -224,6 +241,14 @@ export const useAppStore = create<AppState>()(persist((set) => ({
       ? state.favoriteEvents.filter(id => id !== eventId)
       : [...state.favoriteEvents, eventId]
   })),
+  eventReminders: {},
+  setEventReminder: (eventId, minutesBefore) => set((state) => ({
+    eventReminders: { ...state.eventReminders, [eventId]: minutesBefore }
+  })),
+  removeEventReminder: (eventId) => set((state) => {
+    const { [eventId]: _, ...rest } = state.eventReminders
+    return { eventReminders: rest }
+  }),
 
   // Friends
   friends: [],
@@ -237,16 +262,150 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setIsNavigating: (isNavigating) => set({ isNavigating }),
 
   // UI
-  viewMode: 'angle',
+  viewMode: 'angle', // Главный вид - перспектива
   setViewMode: (mode) => set({ viewMode: mode }),
   activePanel: null,
   setActivePanel: (panel) => set({ activePanel: panel }),
   showMiniMap: true,
   toggleMiniMap: () => set((state) => ({ showMiniMap: !state.showMiniMap })),
+  showPOI: false,
+  togglePOI: () => set((state) => ({ showPOI: !state.showPOI })),
 
   // AR
   arMode: false,
   setArMode: (enabled) => set({ arMode: enabled }),
+
+  // Graphics Quality
+  graphicsQuality: 'high',
+  setGraphicsQuality: (quality) => set({ graphicsQuality: quality }),
+
+  // Lighting Mode
+  lightingMode: 'hdri',
+  setLightingMode: (mode) => set({ lightingMode: mode }),
+
+  // HDRi Settings
+  hdriFile: 'textures/env/kloppenheim_06_puresky_1k.hdr',
+  setHdriFile: (file) => set({ hdriFile: file }),
+  showHdriBackground: true,
+  setShowHdriBackground: (show) => set({ showHdriBackground: show }),
+  hdriIntensity: 1.2,
+  setHdriIntensity: (intensity) => set({ hdriIntensity: intensity }),
+  hdriRotation: 0,
+  setHdriRotation: (rotation) => set({ hdriRotation: rotation }),
+  hdriBlur: 0,
+  setHdriBlur: (blur) => set({ hdriBlur: blur }),
+  
+  // Per-environment settings
+  neutralIntensity: 0.8,
+  setNeutralIntensity: (intensity) => set({ neutralIntensity: intensity }),
+  neutralBlur: 0.2,
+  setNeutralBlur: (blur) => set({ neutralBlur: blur }),
+  
+  whiteIntensity: 0.9,
+  setWhiteIntensity: (intensity) => set({ whiteIntensity: intensity }),
+  whiteBlur: 0.1,
+  setWhiteBlur: (blur) => set({ whiteBlur: blur }),
+  
+  skyIntensity: 0.7,
+  setSkyIntensity: (intensity) => set({ skyIntensity: intensity }),
+  skyBlur: 0.3,
+  setSkyBlur: (blur) => set({ skyBlur: blur }),
+  
+  // Lighting Presets (Model Viewer style)
+  currentLightingPreset: 'neutral',
+  setCurrentLightingPreset: (preset) => set({ currentLightingPreset: preset }),
+  applyLightingPreset: (presetName) => {
+    const presets = {
+      neutral: { intensity: 1.0, rotation: 0, blur: 0.1 },
+      studio: { intensity: 1.5, rotation: 45, blur: 0.05 },
+      warehouse: { intensity: 0.8, rotation: 180, blur: 0.3 },
+      outdoor: { intensity: 1.2, rotation: 270, blur: 0.2 }
+    }
+    
+    const preset = presets[presetName as keyof typeof presets]
+    if (preset) {
+      set({ 
+        hdriIntensity: preset.intensity,
+        hdriRotation: preset.rotation,
+        hdriBlur: preset.blur,
+        currentLightingPreset: presetName
+      })
+    }
+  },
+  
+  // Shadow Animation
+  shadowAnimation: false,
+  setShadowAnimation: (enabled) => set({ shadowAnimation: enabled }),
+  shadowAnimationSpeed: 50,
+  setShadowAnimationSpeed: (speed) => set({ shadowAnimationSpeed: speed }),
+  shadowAnimationType: 'oscillate',
+  setShadowAnimationType: (type) => set({ shadowAnimationType: type }),
+  
+  // Neutral Lighting Controls
+  neutralAmbientIntensity: 0.6,
+  setNeutralAmbientIntensity: (intensity) => set({ neutralAmbientIntensity: intensity }),
+  neutralLightIntensity: 0.8,
+  setNeutralLightIntensity: (intensity) => set({ neutralLightIntensity: intensity }),
+  neutralLightHeight: 30,
+  setNeutralLightHeight: (height) => set({ neutralLightHeight: height }),
+  neutralLightAngle: 0,
+  setNeutralLightAngle: (angle) => set({ neutralLightAngle: angle }),
+  neutralHemisphereIntensity: 0.4,
+  setNeutralHemisphereIntensity: (intensity) => set({ neutralHemisphereIntensity: intensity }),
+  
+  // Studio Lighting Controls
+  studioKeyLightIntensity: 0.8,
+  setStudioKeyLightIntensity: (intensity) => set({ studioKeyLightIntensity: intensity }),
+  studioKeyLightHeight: 40,
+  setStudioKeyLightHeight: (height) => set({ studioKeyLightHeight: height }),
+  studioKeyLightAngle: 45,
+  setStudioKeyLightAngle: (angle) => set({ studioKeyLightAngle: angle }),
+  studioFillLightIntensity: 0.4,
+  setStudioFillLightIntensity: (intensity) => set({ studioFillLightIntensity: intensity }),
+  studioRimLightIntensity: 0.3,
+  setStudioRimLightIntensity: (intensity) => set({ studioRimLightIntensity: intensity }),
+  studioLightColor: '#ffffff',
+  setStudioLightColor: (color) => set({ studioLightColor: color }),
+  
+  // Global Effects
+  ssaaoEnabled: true,
+  setSsaaoEnabled: (enabled) => set({ ssaaoEnabled: enabled }),
+
+  // Shadow Controls
+  shadowIntensity: 0.3,
+  setShadowIntensity: (intensity) => set({ shadowIntensity: intensity }),
+  
+  // Debug Mode
+  debugMode: false,
+  setDebugMode: (enabled) => set({ debugMode: enabled }),
+
+  // Tone Mapping
+  toneMapping: 'ACES',
+  setToneMapping: (toneMapping) => set({ toneMapping }),
+  toneMappingExposure: 1.4,
+  setToneMappingExposure: (exposure) => set({ toneMappingExposure: exposure }),
+
+  // Post-processing effects
+  dofEnabled: false,
+  setDofEnabled: (enabled) => set({ dofEnabled: enabled }),
+  bloomIntensity: 0.5,
+  setBloomIntensity: (intensity) => set({ bloomIntensity: intensity }),
+  bloomThreshold: 0.9,
+  setBloomThreshold: (threshold) => set({ bloomThreshold: threshold }),
+  vignetteIntensity: 0.35,
+  setVignetteIntensity: (intensity) => set({ vignetteIntensity: intensity }),
+  chromaticAberration: 0.002,
+  setChromaticAberration: (value) => set({ chromaticAberration: value }),
+  contactShadowsEnabled: true,
+  setContactShadowsEnabled: (enabled) => set({ contactShadowsEnabled: enabled }),
+
+  // Color adjustments
+  colorBrightness: 0.0,
+  setColorBrightness: (brightness) => set({ colorBrightness: brightness }),
+  colorContrast: 0.05,
+  setColorContrast: (contrast) => set({ colorContrast: contrast }),
+  colorSaturation: 0.1,
+  setColorSaturation: (saturation) => set({ colorSaturation: saturation }),
 
   // Camera
   cameraTarget: null,
@@ -255,6 +414,9 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setCameraPosition: (position) => set({ cameraPosition: position }),
   cameraTargetPosition: null,
   setCameraTargetPosition: (position) => set({ cameraTargetPosition: position }),
+  // Overview camera reset
+  resetCameraToOverview: false,
+  setResetCameraToOverview: (reset) => set({ resetCameraToOverview: reset }),
 
   // Edit mode
   editMode: false,
@@ -265,8 +427,12 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setPoiEditMode: (enabled) => set({ poiEditMode: enabled }),
 
   // Adjustments Toggle
-  showAdjustments: true, // Default to true for user visibility
+  showAdjustments: false,
   setShowAdjustments: (show) => set({ showAdjustments: show }),
+
+  // Active bottom panel
+  activeBottomPanel: null,
+  setActiveBottomPanel: (panel) => set({ activeBottomPanel: panel }),
 
   // Notifications
   notifications: [],
@@ -277,43 +443,17 @@ export const useAppStore = create<AppState>()(persist((set) => ({
     notifications: state.notifications.filter(n => n.id !== id)
   })),
 
-  // HDRI Settings
-  hdriIntensity: 1.0,
-  setHdriIntensity: (intensity) => set({ hdriIntensity: intensity }),
-  hdriMix: 0.0,
-  setHdriMix: (mix) => set({ hdriMix: mix }),
-  hdriProcedural: 0.5,
-  setHdriProcedural: (procedural) => set({ hdriProcedural: procedural }),
-  hdriHue: 0.0,
-  setHdriHue: (hue) => set({ hdriHue: hue }),
-  hdriSaturation: 1.0,
-  setHdriSaturation: (saturation) => set({ hdriSaturation: saturation }),
-  hdriBlur: 0.0,
-  setHdriBlur: (blur) => set({ hdriBlur: blur }),
-  hdriRotation1: 0.0,
-  setHdriRotation1: (rotation) => set({ hdriRotation1: rotation }),
-  hdriRotation2: 0.0,
-  setHdriRotation2: (rotation) => set({ hdriRotation2: rotation }),
-  showHdriBackground: true,
-  setShowHdriBackground: (show) => set({ showHdriBackground: show }),
-  hdriFile: '/textures/env/env_map.hdr',
-  setHdriFile: (file) => set({ hdriFile: file }),
-
-  // Background mode
-  backgroundMode: 'sky',
-  setBackgroundMode: (mode) => set({ backgroundMode: mode }),
-
   // Sun / Time of Day
   timeOfDay: 14, // 2 PM default
   setTimeOfDay: (time) => set({ timeOfDay: time }),
   sunOrientation: 180,
   setSunOrientation: (orientation) => set({ sunOrientation: orientation }),
-  showLightingPanel: false,
-  setShowLightingPanel: (show) => set({ showLightingPanel: show }),
 
-  // Graphics Settings
-  graphicsQuality: 'high', // Default to high quality with effects
-  setGraphicsQuality: (quality) => set({ graphicsQuality: quality }),
+  // Night mode lighting
+  nightLightsEnabled: true,
+  setNightLightsEnabled: (enabled) => set({ nightLightsEnabled: enabled }),
+  nightLightsIntensity: 1.0,
+  setNightLightsIntensity: (intensity) => set({ nightLightsIntensity: intensity }),
 
   // Material Settings
   materialColor: '#bcbcbc',
@@ -322,146 +462,76 @@ export const useAppStore = create<AppState>()(persist((set) => ({
   setMaterialRoughness: (roughness) => set({ materialRoughness: roughness }),
   materialMetalness: 0.02,
   setMaterialMetalness: (metalness) => set({ materialMetalness: metalness }),
-  materialOpacity: 1.0,
-  setMaterialOpacity: (opacity) => set({ materialOpacity: opacity }),
-
-  // Post-processing / Color Correction
-  toneMapping: 'ACES',
-  setToneMapping: (mapping) => set({ toneMapping: mapping }),
-  toneMappingExposure: 10,
-  setToneMappingExposure: (exposure) => set({ toneMappingExposure: exposure }),
-  bloomIntensity: 0.5,
-  setBloomIntensity: (intensity) => set({ bloomIntensity: intensity }),
-  bloomThreshold: 0.9,
-  setBloomThreshold: (threshold) => set({ bloomThreshold: threshold }),
-  vignetteIntensity: 0.35,
-  setVignetteIntensity: (intensity) => set({ vignetteIntensity: intensity }),
-  ssaoEnabled: false,
-  setSsaoEnabled: (enabled) => set({ ssaoEnabled: enabled }),
-  ssaoIntensity: 1.5,
-  setSsaoIntensity: (intensity) => set({ ssaoIntensity: intensity }),
-  dofEnabled: false,
-  setDofEnabled: (enabled) => set({ dofEnabled: enabled }),
-  dofFocusDistance: 0.02,
-  setDofFocusDistance: (distance) => set({ dofFocusDistance: distance }),
-  dofFocalLength: 0.05,
-  setDofFocalLength: (length) => set({ dofFocalLength: length }),
-  dofBokehScale: 3,
-  setDofBokehScale: (scale) => set({ dofBokehScale: scale }),
-  chromaticAberration: 0.002,
-  setChromaticAberration: (amount) => set({ chromaticAberration: amount }),
-  colorBrightness: 0.0,
-  setColorBrightness: (brightness) => set({ colorBrightness: brightness }),
-  colorContrast: 0.05,
-  setColorContrast: (contrast) => set({ colorContrast: contrast }),
-  colorSaturation: 0.1,
-  setColorSaturation: (saturation) => set({ colorSaturation: saturation }),
-
-  // Night mode lighting
-  nightLightsEnabled: true,
-  setNightLightsEnabled: (enabled) => set({ nightLightsEnabled: enabled }),
-  nightLightsIntensity: 1.0,
-  setNightLightsIntensity: (intensity) => set({ nightLightsIntensity: intensity }),
-
-  // Contact shadows
-  contactShadowsEnabled: true,
-  setContactShadowsEnabled: (enabled) => set({ contactShadowsEnabled: enabled }),
-
-  // Atmosphere
-  atmosphereEnabled: true,
-  setAtmosphereEnabled: (enabled) => set({ atmosphereEnabled: enabled }),
-  atmosphereIntensity: 0.4,
-  setAtmosphereIntensity: (intensity) => set({ atmosphereIntensity: intensity }),
-  atmosphereTurbidity: 2.0,
-  setAtmosphereTurbidity: (turbidity) => set({ atmosphereTurbidity: turbidity }),
-  atmosphereMieCoeff: 0.003,
-  setAtmosphereMieCoeff: (coeff) => set({ atmosphereMieCoeff: coeff }),
-  atmosphereRayleighScale: 1.0,
-  setAtmosphereRayleighScale: (scale) => set({ atmosphereRayleighScale: scale }),
-
-  // Clouds
-  cloudsEnabled: true,
-  setCloudsEnabled: (enabled) => set({ cloudsEnabled: enabled }),
-  cloudCoverage: 0.45,
-  setCloudCoverage: (coverage) => set({ cloudCoverage: coverage }),
-  cloudDensity: 0.7,
-  setCloudDensity: (density) => set({ cloudDensity: density }),
-  cloudScale: 1.0,
-  setCloudScale: (scale) => set({ cloudScale: scale }),
-  cloudSpeed: 0.02,
-  setCloudSpeed: (speed) => set({ cloudSpeed: speed }),
-  cloudAltitude: 80,
-  setCloudAltitude: (altitude) => set({ cloudAltitude: altitude }),
-  cloudOpacity: 0.5,
-  setCloudOpacity: (opacity) => set({ cloudOpacity: opacity }),
-
-  // Fog
-  fogEnabled: false,
-  setFogEnabled: (enabled) => set({ fogEnabled: enabled }),
-  fogDensity: 0.3,
-  setFogDensity: (density) => set({ fogDensity: density }),
-  fogHeight: 5,
-  setFogHeight: (height) => set({ fogHeight: height }),
-
-  // God Rays
-  godRaysEnabled: false,
-  setGodRaysEnabled: (enabled) => set({ godRaysEnabled: enabled }),
-  godRaysIntensity: 0.5,
-  setGodRaysIntensity: (intensity) => set({ godRaysIntensity: intensity }),
 }), {
   name: 'mff-lighting-settings',
-  version: 4, // Bump for takram atmosphere migration
-  migrate: (persistedState: any) => persistedState, // Accept any old state shape
+  version: 7,
+  migrate: (persistedState: any, version: number) => {
+    // List of available HDRI files
+    const availableHdriFiles = [
+      'textures/env/citrus_orchard_road_puresky_1k.hdr',
+      'textures/env/env_map.hdr',
+      'textures/env/kloppenheim_06_puresky_1k.hdr',
+      'textures/env/qwantani_sunset_puresky_1k.hdr'
+    ]
+    
+    // Reset hdriFile if it's not in the available list
+    if (persistedState.hdriFile && !availableHdriFiles.includes(persistedState.hdriFile)) {
+      console.warn(`Resetting invalid hdriFile: ${persistedState.hdriFile}`)
+      persistedState.hdriFile = 'textures/env/kloppenheim_06_puresky_1k.hdr'
+    }
+    
+    return persistedState
+  },
   partialize: (state) => ({
-    // Only persist lighting and effects settings
+    // Only persist lighting settings
+    lightingMode: state.lightingMode,
     timeOfDay: state.timeOfDay,
     sunOrientation: state.sunOrientation,
-    hdriIntensity: state.hdriIntensity,
     hdriFile: state.hdriFile,
+    hdriRotation: state.hdriRotation,
     hdriBlur: state.hdriBlur,
-    hdriRotation1: state.hdriRotation1,
-    hdriProcedural: state.hdriProcedural,
-    backgroundMode: state.backgroundMode,
-    showHdriBackground: state.showHdriBackground,
-    graphicsQuality: state.graphicsQuality,
-    toneMapping: state.toneMapping,
-    toneMappingExposure: state.toneMappingExposure,
-    bloomIntensity: state.bloomIntensity,
-    bloomThreshold: state.bloomThreshold,
-    vignetteIntensity: state.vignetteIntensity,
-    ssaoEnabled: state.ssaoEnabled,
-    ssaoIntensity: state.ssaoIntensity,
-    dofEnabled: state.dofEnabled,
-    dofFocusDistance: state.dofFocusDistance,
-    dofFocalLength: state.dofFocalLength,
-    dofBokehScale: state.dofBokehScale,
-    chromaticAberration: state.chromaticAberration,
-    colorBrightness: state.colorBrightness,
-    colorContrast: state.colorContrast,
-    colorSaturation: state.colorSaturation,
     nightLightsEnabled: state.nightLightsEnabled,
     nightLightsIntensity: state.nightLightsIntensity,
-    contactShadowsEnabled: state.contactShadowsEnabled,
     materialColor: state.materialColor,
     materialRoughness: state.materialRoughness,
     materialMetalness: state.materialMetalness,
-    // Atmosphere & Clouds
-    atmosphereEnabled: state.atmosphereEnabled,
-    atmosphereIntensity: state.atmosphereIntensity,
-    atmosphereTurbidity: state.atmosphereTurbidity,
-    atmosphereMieCoeff: state.atmosphereMieCoeff,
-    atmosphereRayleighScale: state.atmosphereRayleighScale,
-    cloudsEnabled: state.cloudsEnabled,
-    cloudCoverage: state.cloudCoverage,
-    cloudDensity: state.cloudDensity,
-    cloudScale: state.cloudScale,
-    cloudSpeed: state.cloudSpeed,
-    cloudAltitude: state.cloudAltitude,
-    cloudOpacity: state.cloudOpacity,
-    fogEnabled: state.fogEnabled,
-    fogDensity: state.fogDensity,
-    fogHeight: state.fogHeight,
-    godRaysEnabled: state.godRaysEnabled,
-    godRaysIntensity: state.godRaysIntensity,
+    graphicsQuality: state.graphicsQuality,
+    showHdriBackground: state.showHdriBackground,
+    hdriIntensity: state.hdriIntensity,
+    toneMapping: state.toneMapping,
+    toneMappingExposure: state.toneMappingExposure,
+    dofEnabled: state.dofEnabled,
+    bloomIntensity: state.bloomIntensity,
+    bloomThreshold: state.bloomThreshold,
+    vignetteIntensity: state.vignetteIntensity,
+    chromaticAberration: state.chromaticAberration,
+    contactShadowsEnabled: state.contactShadowsEnabled,
+    colorBrightness: state.colorBrightness,
+    colorContrast: state.colorContrast,
+    colorSaturation: state.colorSaturation,
+    currentLightingPreset: state.currentLightingPreset,
+    shadowAnimation: state.shadowAnimation,
+    shadowAnimationSpeed: state.shadowAnimationSpeed,
+    shadowAnimationType: state.shadowAnimationType,
+    neutralAmbientIntensity: state.neutralAmbientIntensity,
+    neutralLightIntensity: state.neutralLightIntensity,
+    neutralLightHeight: state.neutralLightHeight,
+    neutralLightAngle: state.neutralLightAngle,
+    neutralHemisphereIntensity: state.neutralHemisphereIntensity,
+    studioKeyLightIntensity: state.studioKeyLightIntensity,
+    studioKeyLightHeight: state.studioKeyLightHeight,
+    studioKeyLightAngle: state.studioKeyLightAngle,
+    studioFillLightIntensity: state.studioFillLightIntensity,
+    studioRimLightIntensity: state.studioRimLightIntensity,
+    studioLightColor: state.studioLightColor,
+    ssaaoEnabled: state.ssaaoEnabled,
+    shadowIntensity: state.shadowIntensity,
+    debugMode: state.debugMode,
+    neutralIntensity: state.neutralIntensity,
+    neutralBlur: state.neutralBlur,
+    whiteIntensity: state.whiteIntensity,
+    whiteBlur: state.whiteBlur,
+    skyIntensity: state.skyIntensity,
+    skyBlur: state.skyBlur,
   }),
 }))
