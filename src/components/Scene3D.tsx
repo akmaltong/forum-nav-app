@@ -226,6 +226,47 @@ export default function Scene3D() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Handle fullscreen toggle on double click
+  useEffect(() => {
+    const handleDoubleClick = () => {
+      const canvas = document.querySelector('canvas')
+      if (!canvas) return
+
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        canvas.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`)
+        })
+      } else {
+        // Exit fullscreen
+        document.exitFullscreen()
+      }
+    }
+
+    // Handle fullscreen change to update canvas size
+    const handleFullscreenChange = () => {
+      const canvas = document.querySelector('canvas')
+      if (canvas) {
+        // Force resize after fullscreen change
+        setTimeout(() => {
+          canvas.style.width = '100%'
+          canvas.style.height = '100%'
+        }, 100)
+      }
+    }
+
+    const canvas = document.querySelector('canvas')
+    if (canvas) {
+      canvas.addEventListener('dblclick', handleDoubleClick)
+      document.addEventListener('fullscreenchange', handleFullscreenChange)
+      
+      return () => {
+        canvas.removeEventListener('dblclick', handleDoubleClick)
+        document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      }
+    }
+  }, [])
+
   // Close bottom panels on click in empty space
   const handleSceneClick = () => {
     if (activeBottomPanel) {
@@ -264,7 +305,7 @@ export default function Scene3D() {
       <Canvas
         shadows
         className="w-full h-full"
-        style={{ background: '#0a0a0f', display: 'block', width: '100%', height: '100%' }}
+        style={{ background: '#0a0a0f', display: 'block', width: '100%', height: '100%', touchAction: 'none' }}
         gl={{
           toneMapping: getToneMapping(),
           toneMappingExposure: toneMappingExposure,
@@ -273,12 +314,17 @@ export default function Scene3D() {
           powerPreference: 'high-performance',
           stencil: true,
           depth: true,
+          alpha: false, // Disable alpha for better performance
+          preserveDrawingBuffer: false, // Better performance
         }}
         onCreated={(state) => {
           // Configure renderer for smooth shadows
           state.gl.shadowMap.enabled = true
           state.gl.shadowMap.type = THREE.PCFSoftShadowMap
-          state.gl.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+          
+          // Limit pixel ratio for performance (max 2x)
+          const pixelRatio = Math.min(window.devicePixelRatio, 2)
+          state.gl.setPixelRatio(pixelRatio)
           
           // Performance optimizations
           state.gl.powerPreference = 'high-performance'
